@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>سيراميكا الزهراء</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container header__row">
+      <a href="/" class="logo"><img src="assets/images/logo.png" alt="Ceramica El-Zahraa"></a>
+
+      <div class="location">
+        <small data-i18n="deliverTo"></small>
+        <strong data-i18n="egypt"></strong>
+      </div>
+
+      <form class="search" role="search">
+        <input type="search" data-i18n-placeholder="searchPlaceholder" aria-label="search">
+        <button type="submit" data-i18n="search"></button>
+      </form>
+
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="ar">عربي</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+
+      <a href="login.html" class="header__item" id="accountLink">
+        <small></small>
+        <strong></strong>
+      </a>
+      <button type="button" class="logout" id="logoutBtn" hidden data-i18n="logout"></button>
+
+      <a href="#" class="cart-btn"><span data-i18n="cart"></span> <span id="cartCount">0</span></a>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <ul class="container nav__list">
+      <li><a href="/" class="is-active" data-i18n="navHome"></a></li>
+      <li><a href="#" data-i18n="navCeramic"></a></li>
+      <li><a href="#" data-i18n="navPorcelain"></a></li>
+      <li><a href="#" data-i18n="navSanitary"></a></li>
+      <li><a href="#" data-i18n="navMixers"></a></li>
+      <li><a href="#" data-i18n="navBasins"></a></li>
+      <li><a href="#" data-i18n="navAccessories"></a></li>
+      <li><a href="#" data-i18n="navOffers"></a></li>
+      <li><a href="about.html" data-i18n="navAbout"></a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <section class="container hero">
+      <img src="assets/images/banner.jpg" alt="" onerror="this.style.display='none'">
+      <div class="hero__text">
+        <h1 data-i18n="heroTitle"></h1>
+        <p data-i18n="heroText"></p>
+        <a href="#" class="btn btn--primary" data-i18n="shopNow"></a>
+      </div>
+    </section>
+
+    <section class="container products" data-section="deals" data-title-key="dealsTitle"></section>
+    <section class="container products" data-section="bath" data-title-key="sanitaryTitle"></section>
+  </main>
+
+    <div id="site-footer"></div>
+
+  <a href="https://wa.me/201000000000" class="whatsapp" aria-label="WhatsApp" target="_blank" rel="noopener">WA</a>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/footer.js"></script>
+  <script src="js/products.js"></script>   <!-- ده في index.html بس -->
+  <script src="js/main.js"></script>
+</body>
+</html>

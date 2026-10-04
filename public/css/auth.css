@@ -1,0 +1,16 @@
+.auth-page { min-height: 100vh; display: grid; place-items: center; background: #0b0b0b; padding: 20px; }
+.auth-card { width: min(420px, 100%); background: #fff; border-radius: 12px; padding: 28px; position: relative; }
+.auth-logo { display: block; background: #0b0b0b; border-radius: 10px; padding: 12px; margin-bottom: 18px; }
+.auth-logo img { height: 90px; margin-inline: auto; }
+.auth-lang { position: absolute; top: 14px; inset-inline-end: 14px; background: rgba(255,255,255,.15); padding: 3px; }
+.auth-lang button { padding: 3px 10px; font-size: .85rem; }
+.tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+.tab { flex: 1; padding: 10px; font-weight: 700; color: var(--muted); border-bottom: 3px solid transparent; }
+.tab.is-active { color: var(--text); border-color: var(--orange); }
+.field { display: block; margin-bottom: 14px; }
+.field span { display: block; font-weight: 600; margin-bottom: 4px; }
+.field input { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 6px; cursor: text; }
+.field input:focus { outline: 2px solid var(--orange); border-color: transparent; }
+.form-error { background: #fdecea; color: #b3261e; padding: 9px 12px; border-radius: 6px; margin-bottom: 12px; font-size: .92rem; }
+.auth-submit { width: 100%; padding: 12px; font-size: 1rem; }
+.auth-submit:disabled { opacity: .6; cursor: wait; }

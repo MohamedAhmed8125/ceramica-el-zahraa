@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ceramica El-Zahraa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body class="auth-page">
+  <div class="auth-card">
+    <a href="/" class="auth-logo"><img src="assets/images/logo.png" alt="Ceramica El-Zahraa"></a>
+
+    <div class="lang auth-lang" role="group">
+      <button type="button" data-lang="ar">عربي</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab is-active" data-tab="login" data-i18n="loginTab"></button>
+      <button type="button" class="tab" data-tab="register" data-i18n="registerTab"></button>
+    </div>
+
+    <form id="authForm" novalidate>
+      <label class="field" id="nameField" hidden>
+        <span data-i18n="fullName"></span>
+        <input type="text" name="name" autocomplete="name" maxlength="60">
+      </label>
+      <label class="field">
+        <span data-i18n="email"></span>
+        <input type="email" name="email" autocomplete="email" required>
+      </label>
+      <label class="field">
+        <span data-i18n="password"></span>
+        <input type="password" name="password" autocomplete="current-password" required minlength="8">
+      </label>
+      <p class="form-error" id="formError" role="alert" hidden></p>
+      <button type="submit" class="btn btn--primary auth-submit" id="submitBtn"></button>
+    </form>
+  </div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>
