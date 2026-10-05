@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>اتصل بنا | سيراميكا الزهراء</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/about.css">
+  <link rel="stylesheet" href="css/contact.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container header__row">
+      <button type="button" class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">☰</button>
+      <a href="/" class="logo"><img src="assets/images/logo.png" alt="Ceramica El-Zahraa"></a>
+
+      <div class="location">
+        <small data-i18n="deliverTo"></small>
+        <strong data-i18n="egypt"></strong>
+      </div>
+
+      <form class="search" role="search" onsubmit="return false">
+        <input type="search" data-i18n-placeholder="searchPlaceholder" aria-label="search">
+        <button type="submit" data-i18n="search"></button>
+      </form>
+
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="ar">عربي</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+
+      <a href="login.html" class="header__item" id="accountLink">
+        <small></small>
+        <strong></strong>
+      </a>
+      <button type="button" class="logout" id="logoutBtn" hidden data-i18n="logout"></button>
+
+      <a href="#" class="cart-btn"><span data-i18n="cart"></span> <span id="cartCount">0</span></a>
+    </div>
+  </header>
+
+  <div class="nav-overlay" id="navOverlay"></div>
+  <nav class="nav" id="mainNav">
+    <div class="nav__top">
+      <button type="button" class="nav__close" id="navClose" aria-label="Close">✕</button>
+    </div>
+    <ul class="container nav__list">
+      <li><a href="/" data-i18n="navHome"></a></li>
+      <li><a href="#" data-i18n="navCeramic"></a></li>
+      <li><a href="#" data-i18n="navPorcelain"></a></li>
+      <li><a href="#" data-i18n="navSanitary"></a></li>
+      <li><a href="#" data-i18n="navMixers"></a></li>
+      <li><a href="#" data-i18n="navBasins"></a></li>
+      <li><a href="#" data-i18n="navAccessories"></a></li>
+      <li><a href="#" data-i18n="navOffers"></a></li>
+      <li><a href="about.html" data-i18n="navAbout"></a></li>
+    </ul>
+    <div class="nav__extra">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="ar">عربي</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="about-hero">
+      <div class="container">
+        <h1 data-i18n="contactUs"></h1>
+      </div>
+    </section>
+
+    <section class="container contact-wrap">
+      <form class="contact-form" id="contactForm" novalidate>
+        <p class="contact-intro" data-i18n="contactIntro"></p>
+        <label class="field">
+          <span data-i18n="fullName"></span>
+          <input type="text" name="name" autocomplete="name" maxlength="60" required>
+        </label>
+        <label class="field">
+          <span data-i18n="email"></span>
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <label class="field">
+          <span data-i18n="phoneLabel"></span>
+          <input type="tel" name="phone" autocomplete="tel" dir="ltr" inputmode="tel" maxlength="20" dir="ltr" placeholder="01012345678">
+        </label>
+        <label class="field">
+          <span data-i18n="messageLabel"></span>
+          <textarea name="message" rows="5" maxlength="2000" required></textarea>
+        </label>
+        <p class="form-msg" id="formMsg" role="alert" hidden></p>
+        <button type="submit" class="btn btn--primary" id="sendBtn"></button>
+      </form>
+
+      <aside class="contact-info" id="contactInfo"></aside>
+    </section>
+    
+    <section class="container map-section">
+      <iframe id="mapFrame" title="Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <a id="mapLink" class="btn btn--primary" target="_blank" rel="noopener" data-i18n="openMap"></a>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <a href="https://wa.me/201000000000" class="whatsapp" aria-label="WhatsApp" target="_blank" rel="noopener">WA</a>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/footer.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/contact.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

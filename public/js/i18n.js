@@ -31,7 +31,14 @@ const I18N = {
     newsletterPlaceholder: 'أدخل بريدك الإلكتروني', subscribe: 'اشتراك',
     custService: 'خدمة العملاء', terms: 'الشروط والأحكام', contactUs: 'اتصل بنا', blog: 'المدونة', faq: 'الأسئلة الشائعة',
     shopByCat: 'تسوق حسب الفئة', followUs: 'تابعنا',
-    rights: 'جميع الحقوق محفوظة'
+    rights: 'جميع الحقوق محفوظة',
+    contactIntro: 'عندك سؤال أو عايز تستفسر عن منتج؟ ابعتلنا رسالة وهنرد عليك في أقرب وقت.',
+    phoneLabel: 'رقم التليفون (اختياري)', messageLabel: 'رسالتك', sendMsg: 'إرسال',
+    msgSent: 'وصلتنا رسالتك، شكراً لتواصلك معنا.', contactInfo: 'بيانات التواصل',
+    invalid_phone: 'رقم التليفون غير صحيح. اكتب رقم موبايل مصري من 11 رقم (مثال: 01012345678).', invalid_message: 'الرسالة لازم تكون 5 أحرف على الأقل.',
+    server_error: 'حصل خطأ في السيرفر، جرّب تاني بعد شوية.',
+    addressLabel: 'العنوان:',
+    openMap: 'افتح في خرائط جوجل'
   },
   en: {
     deliverTo: 'Deliver to', egypt: 'Egypt', search: 'Search', searchPlaceholder: 'What are you looking for?',
@@ -65,7 +72,15 @@ const I18N = {
     newsletterPlaceholder: 'Enter your email', subscribe: 'Subscribe',
     custService: 'Customer service', terms: 'Terms & conditions', contactUs: 'Contact us', blog: 'Blog', faq: 'FAQ',
     shopByCat: 'Shop by category', followUs: 'Follow us',
-    rights: 'All rights reserved'
+    rights: 'All rights reserved',
+    contactIntro: 'Have a question or want to ask about a product? Send us a message and we will get back to you soon.',
+    phoneLabel: 'Phone (optional)', messageLabel: 'Your message', sendMsg: 'Send',
+    msgSent: 'We received your message. Thank you for contacting us.', contactInfo: 'Contact details',
+    invalid_phone: 'Invalid phone number. Enter an Egyptian mobile number of 11 digits (e.g. 01012345678).', 
+    invalid_message: 'Message must be at least 5 characters.',
+    server_error: 'Server error, please try again shortly.',
+    addressLabel: 'Address:',
+    openMap: 'Open in Google Maps'
   }
 };
 

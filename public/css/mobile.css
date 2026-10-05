@@ -1,0 +1,53 @@
+/* ===== أساسيات ===== */
+html { -webkit-text-size-adjust: 100%; }
+body { overflow-x: clip; }
+
+/* مخفية على الكمبيوتر */
+.menu-btn, .nav__top, .nav__extra, .nav-overlay { display: none; }
+
+/* ===== تابلت وموبايل ===== */
+@media (max-width: 900px) {
+  /* الهيدر */
+  .header { padding: 10px 0; }
+  .header__row { gap: 10px; }
+  .menu-btn { display: grid; place-items: center; width: 42px; height: 42px; font-size: 1.6rem; color: #fff; background: rgba(255,255,255,.12); border-radius: var(--radius); }
+  .logo img { height: 44px; }
+  .location, .header .lang { display: none; }
+  .header__item { margin-inline-start: auto; }
+  .header__item small { display: none; }
+  .header__item strong { font-size: .9rem; }
+  .cart-btn { padding: 8px 12px; font-size: .9rem; }
+  .logout { padding: 8px 10px; font-size: .85rem; }
+  .search { order: 10; flex-basis: 100%; }
+
+  /* القايمة الجانبية */
+  .nav-overlay { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.55); opacity: 0; visibility: hidden; transition: opacity .25s; z-index: 90; }
+  .nav-overlay.is-open { opacity: 1; visibility: visible; }
+
+  .nav { position: fixed; top: 0; bottom: 0; inset-inline-start: 0; width: min(300px, 82vw); z-index: 100; overflow-y: auto; display: flex; flex-direction: column; border: 0; visibility: hidden; transition: transform .28s ease, visibility .28s; }
+  html[dir="rtl"] .nav { transform: translateX(100%); }
+  html[dir="ltr"] .nav { transform: translateX(-100%); }
+  html[dir] .nav.is-open { transform: none; visibility: visible; box-shadow: 0 0 30px rgba(0,0,0,.35); }
+
+  .nav__top { display: flex; justify-content: flex-end; padding: 12px 14px; background: #0b0b0b; }
+  .nav__close { color: #fff; font-size: 1.4rem; width: 40px; height: 40px; }
+  .nav .container { width: 100%; }
+  .nav__list { flex-direction: column; justify-content: flex-start; overflow: visible; flex: 1; }
+  .nav__list a { padding: 15px 20px; border-bottom: 1px solid var(--border); }
+  .nav__extra { display: block; padding: 16px 20px; border-top: 1px solid var(--border); }
+  .nav__extra .lang { display: inline-flex; background: var(--bg-soft); }
+  .nav__extra .lang button { color: #111; }
+  .nav__extra .lang button.is-active { background: var(--orange); }
+}
+
+/* ===== موبايل ===== */
+@media (max-width: 600px) {
+  input, select, textarea { font-size: 16px; } /* بيمنع زوم iPhone لما تضغط على خانة */
+  .hero { min-height: 240px; }
+  .hero__text h1 { font-size: 1.6rem; }
+  .products { margin-top: 32px; }
+  .products__head { flex-wrap: wrap; gap: 12px; }
+  .arrow { display: none; } /* بالسحب بالإصبع */
+  .card__bottom { flex-wrap: wrap; gap: 8px; }
+  .whatsapp { width: 56px; height: 56px; bottom: 16px; }
+}

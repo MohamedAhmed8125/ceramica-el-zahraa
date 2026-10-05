@@ -105,6 +105,46 @@ app.post('/api/logout', (req, res) => {
 
 app.get('/api/me', auth, (req, res) => res.json({ user: publicUser(req.user) }));
 
+/* ---------- رسائل "اتصل بنا" ---------- */
+const MSG_FILE = path.join(__dirname, '..', 'data', 'messages.json');
+let msgQueue = Promise.resolve();
+const saveMessage = m => (msgQueue = msgQueue.then(async () => {
+  let list = [];
+  try { list = JSON.parse(await fs.readFile(MSG_FILE, 'utf8')); } catch {}
+  list.push(m);
+  await fs.writeFile(MSG_FILE, JSON.stringify(list, null, 2));
+}));
+
+function normalizePhone(input) {
+  let s = String(input || '').trim()
+    .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+    .replace(/[\s\-().]/g, '');
+  if (!s) return '';
+  if (s.startsWith('+20')) s = '0' + s.slice(3);
+  else if (s.startsWith('0020')) s = '0' + s.slice(4);
+  else if (/^20\d{9,10}$/.test(s)) s = '0' + s.slice(2);
+  const mobile = /^01[0125]\d{8}$/;
+  const landline = /^(02\d{8}|03\d{7}|0[4-9]\d{8})$/;
+  return mobile.test(s) || landline.test(s) ? s : null; // null = غير صحيح
+}
+
+app.post('/api/contact', limiter, async (req, res) => {
+  const name = String(req.body.name || '').trim();
+  const email = String(req.body.email || '').trim().toLowerCase();
+    const phone = normalizePhone(req.body.phone);
+  const message = String(req.body.message || '').trim();
+  if (name.length < 2 || name.length > 60) return res.status(400).json({ error: 'invalid_name' });
+  if (!EMAIL_RE.test(email) || email.length > 120) return res.status(400).json({ error: 'invalid_email' });
+  if (phone === null) return res.status(400).json({ error: 'invalid_phone' });
+  if (message.length < 5 || message.length > 2000) return res.status(400).json({ error: 'invalid_message' });
+  try {
+    await saveMessage({ id: crypto.randomUUID(), name, email, phone, message, createdAt: new Date().toISOString() });
+    res.status(201).json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.listen(PORT, () => console.log(`الموقع شغال على http://localhost:${PORT}`));

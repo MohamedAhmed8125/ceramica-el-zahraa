@@ -1,0 +1,30 @@
+.contact-wrap { display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; margin-top: 48px; align-items: start; }
+
+.contact-form { border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+.contact-intro { color: #444; line-height: 1.9; margin-bottom: 18px; }
+.contact-form .field { display: block; margin-bottom: 14px; }
+.contact-form .field span { display: block; font-weight: 600; margin-bottom: 4px; }
+.contact-form input, .contact-form textarea { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; cursor: text; }
+.contact-form textarea { resize: vertical; }
+.contact-form input:focus, .contact-form textarea:focus { outline: 2px solid var(--orange); border-color: transparent; }
+.contact-form .btn { padding: 12px 28px; }
+.contact-form .btn:disabled { opacity: .6; cursor: wait; }
+
+.form-msg { padding: 9px 12px; border-radius: 6px; margin-bottom: 12px; font-size: .95rem; background: #fdecea; color: #b3261e; }
+.form-msg.ok { background: #e7f6ee; color: #12724a; }
+
+.contact-info { background: #0b0b0b; color: #fff; border-radius: var(--radius); padding: 28px; }
+.contact-info h2 { color: var(--orange); font-size: 1.4rem; font-weight: 800; margin-bottom: 18px; }
+.contact-info .row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.contact-info .row > i { color: var(--orange); font-size: 1.3rem; width: 26px; text-align: center; }
+.contact-info small { display: block; color: #aaa; font-size: .8rem; }
+.contact-info a:hover { color: var(--orange); }
+.contact-info .social { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.contact-info .social a { width: 43px; height: 43px; border-radius: 6px; background: var(--orange); color: #111; display: grid; place-items: center; font-size: 1.15rem; }
+.contact-info .social a:hover { background: #fff; color: #111; }
+
+@media (max-width: 900px) { .contact-wrap { grid-template-columns: 1fr; } }
+
+.map-section { margin-top: 32px; }
+.map-section iframe { width: 100%; height: 380px; border: 0; border-radius: var(--radius); background: var(--bg-soft); display: block; margin-bottom: 14px; }
+@media (max-width: 600px) { .map-section iframe { height: 280px; } }
