@@ -15,6 +15,9 @@ if (!SECRET || SECRET.length < 32) {
 }
 const PORT = process.env.PORT || 3000;
 const IS_PROD = process.env.NODE_ENV === 'production';
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const isAdmin = u => !!ADMIN_EMAIL && u.email === ADMIN_EMAIL;
 const DB_FILE = path.join(__dirname, '..', 'data', 'users.json');
 const COOKIE = 'token';
 const DUMMY_HASH = bcrypt.hashSync('dummy-password', 12); // لتقليل الفرق الزمني عند إيميل غير موجود
@@ -36,7 +39,7 @@ const updateUsers = fn => (queue = queue.then(async () => {
 
 /* ---------- Helpers ---------- */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const publicUser = u => ({ id: u.id, name: u.name, email: u.email });
+const publicUser = u => ({ id: u.id, name: u.name, email: u.email, role: isAdmin(u) ? 'admin' : 'user' });
 const setCookie = (res, user) => {
   const token = jwt.sign({ sub: user.id }, SECRET, { expiresIn: '7d' });
   res.cookie(COOKIE, token, {
@@ -75,6 +78,7 @@ app.post('/api/register', limiter, async (req, res) => {
   if (name.length < 2 || name.length > 60) return res.status(400).json({ error: 'invalid_name' });
   if (!EMAIL_RE.test(email) || email.length > 120) return res.status(400).json({ error: 'invalid_email' });
   if (password.length < 8 || password.length > 100) return res.status(400).json({ error: 'weak_password' });
+  if (email === ADMIN_EMAIL) return res.status(409).json({ error: 'email_exists' });
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await updateUsers(users => {
@@ -145,6 +149,118 @@ app.post('/api/contact', limiter, async (req, res) => {
   }
 });
 
+/* ---------- لوحة الأدمن ---------- */
+const readMessages = async () => {
+  try { return JSON.parse(await fs.readFile(MSG_FILE, 'utf8')); }
+  catch { return []; }
+};
+const updateMessages = fn => {
+  const run = msgQueue.catch(() => {}).then(async () => {
+    const list = await readMessages();
+    const result = await fn(list);
+    await fs.writeFile(MSG_FILE, JSON.stringify(list, null, 2));
+    return result;
+  });
+  msgQueue = run.catch(() => {});
+  return run;
+};
+
+const requireAdmin = (req, res, next) =>
+  isAdmin(req.user) ? next() : res.status(403).json({ error: 'forbidden' });
+const adminOnly = [auth, requireAdmin];
+
+app.get('/api/admin/stats', adminOnly, async (req, res) => {
+  const [users, msgs] = await Promise.all([readUsers(), readMessages()]);
+  res.json({ users: users.length, messages: msgs.length, unread: msgs.filter(m => !m.read).length });
+});
+
+app.get('/api/admin/messages', adminOnly, async (req, res) => {
+  res.json({ messages: (await readMessages()).reverse() }); // الأحدث الأول
+});
+
+app.patch('/api/admin/messages/:id', adminOnly, async (req, res) => {
+  const read = req.body.read !== false;
+  const ok = await updateMessages(list => {
+    const m = list.find(x => x.id === req.params.id);
+    if (!m) return false;
+    m.read = read;
+    return true;
+  });
+  ok ? res.json({ ok: true }) : res.status(404).json({ error: 'not_found' });
+});
+
+app.delete('/api/admin/messages/:id', adminOnly, async (req, res) => {
+  const ok = await updateMessages(list => {
+    const i = list.findIndex(x => x.id === req.params.id);
+    if (i < 0) return false;
+    list.splice(i, 1);
+    return true;
+  });
+  ok ? res.json({ ok: true }) : res.status(404).json({ error: 'not_found' });
+});
+
+app.get('/api/admin/users', adminOnly, async (req, res) => {
+  const users = (await readUsers()).map(u => ({
+    id: u.id, name: u.name, email: u.email, role: isAdmin(u) ? 'admin' : 'user', createdAt: u.createdAt
+  }));
+  res.json({ users: users.reverse() });
+});
+
+app.delete('/api/admin/users/:id', adminOnly, async (req, res) => {
+  if (req.params.id === req.user.id) return res.status(400).json({ error: 'cannot_delete_self' });
+  const result = await updateUsers(users => {
+    const i = users.findIndex(u => u.id === req.params.id);
+    if (i < 0) return 'not_found';
+    if (isAdmin(users[i])) return 'is_admin';
+    users.splice(i, 1);
+    return 'ok';
+  });
+  if (result === 'ok') return res.json({ ok: true });
+  res.status(result === 'not_found' ? 404 : 400).json({ error: result });
+});
+
+app.post('/api/admin/password', limiter, adminOnly, async (req, res) => {
+  const current = String(req.body.current || '');
+  const next = String(req.body.next || '');
+  if (next.length < 8 || next.length > 100) return res.status(400).json({ error: 'weak_password' });
+  if (!(await bcrypt.compare(current, req.user.passwordHash))) {
+    return res.status(401).json({ error: 'invalid_credentials' });
+  }
+  const passwordHash = await bcrypt.hash(next, 12);
+  await updateUsers(users => {
+    const u = users.find(x => x.id === req.user.id);
+    if (u) u.passwordHash = passwordHash;
+  });
+  res.json({ ok: true });
+});
+
+app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-app.listen(PORT, () => console.log(`الموقع شغال على http://localhost:${PORT}`));
+app.use((req, res) => res.status(404).sendFile(path.join(__dirname, '..', 'public', '404.html')));
+
+async function seedAdmin() {
+  if (!ADMIN_EMAIL) return;
+  const exists = (await readUsers()).some(u => u.email === ADMIN_EMAIL);
+  if (exists) return;
+  if (ADMIN_PASSWORD.length < 8) {
+    console.warn('ADMIN_PASSWORD ناقص أو أقل من 8 أحرف، فمش هيتعمل حساب الأدمن.');
+    return;
+  }
+  const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+  await updateUsers(users => {
+    users.push({
+      id: crypto.randomUUID(),
+      name: 'سيراميكا الزهراء',
+      email: ADMIN_EMAIL,
+      passwordHash,
+      createdAt: new Date().toISOString()
+    });
+  });
+  console.log('تم إنشاء حساب الأدمن:', ADMIN_EMAIL);
+}
+
+seedAdmin()
+  .catch(err => console.error('فشل إنشاء حساب الأدمن:', err))
+  .then(() => app.listen(PORT, () => console.log(`الموقع شغال على http://localhost:${PORT}`)));

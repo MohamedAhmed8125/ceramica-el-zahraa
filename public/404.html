@@ -1,0 +1,31 @@
+v<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-title="notFoundTitle">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>404</title>
+  <link rel="icon" type="image/png" href="/assets/images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/auth.css">
+  <style>
+    .nf { text-align: center; }
+    .nf h1 { font-size: 4.5rem; font-weight: 800; color: var(--orange-dark); line-height: 1; margin-bottom: 8px; }
+    .nf h2 { font-size: 1.4rem; font-weight: 800; }
+    .nf p { margin: 10px 0 22px; color: #444; }
+  </style>
+</head>
+<body class="auth-page">
+  <div class="auth-card nf">
+    <a href="/" class="auth-logo"><img src="/assets/images/logo.png" alt="Ceramica El-Zahraa"></a>
+    <h1>404</h1>
+    <h2 data-i18n="notFoundTitle"></h2>
+    <p data-i18n="notFoundText"></p>
+    <a href="/" class="btn btn--primary" data-i18n="backHome"></a>
+  </div>
+
+  <script src="/js/i18n.js"></script>
+  <script>applyLang();</script>
+</body>
+</html>

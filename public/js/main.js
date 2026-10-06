@@ -58,7 +58,8 @@ function renderAccount() {
   if (currentUser) {
     small.textContent = t('hello');
     strong.textContent = currentUser.name;
-    a.removeAttribute('href');
+    if (currentUser.role === 'admin') a.setAttribute('href', 'admin.html');
+    else a.removeAttribute('href');
     $('#logoutBtn').hidden = false;
   } else {
     small.textContent = t('login');

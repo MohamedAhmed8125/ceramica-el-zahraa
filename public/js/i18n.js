@@ -13,7 +13,7 @@ const I18N = {
     invalid_name: 'اكتب اسمك (حرفين على الأقل).', invalid_email: 'البريد الإلكتروني غير صحيح.',
     weak_password: 'كلمة المرور لازم تكون 8 أحرف على الأقل.', email_exists: 'البريد ده مسجل بالفعل.',
     invalid_credentials: 'البريد أو كلمة المرور غير صحيحة.', too_many_requests: 'محاولات كتير، جرّب بعد شوية.',
-        network: 'تعذر الاتصال بالسيرفر. تأكد إنه شغال.',
+    network: 'تعذر الاتصال بالسيرفر. تأكد إنه شغال.',
     aboutTitle: 'من نحن', aboutWelcome: 'أهلاً بكم في سيراميكا الزهراء',
     aboutIntro1: 'في سيراميكا الزهراء نؤمن بأن كل مساحة تستحق أن تجمع بين الجمال والعملية. لذلك نحرص على توفير مجموعة متنوعة من منتجات التشطيبات المنزلية، تشمل السيراميك، البورسلين، الأدوات الصحية، الخلاطات، وإكسسوارات الحمامات، لتساعدك على تصميم وتجهيز منزلك بالشكل الذي يناسب ذوقك واحتياجاتك.',
     aboutIntro2: 'نركز دائمًا على تقديم منتجات عالية الجودة، وتشكيلة متنوعة، وخدمة مميزة، مع اختيار منتجات من علامات تجارية موثوقة وبأسعار تنافسية.',
@@ -25,7 +25,7 @@ const I18N = {
     w3t: 'خدمة تهتم بك', w3d: 'نساعدك في اختيار المنتجات المناسبة لمساحتك واحتياجاتك، ونحرص على تقديم تجربة شراء مريحة ومميزة.',
     w4t: 'أسعار تنافسية', w4d: 'نسعى دائمًا إلى تقديم أفضل قيمة مقابل السعر مع الحفاظ على الجودة والتنوع.',
     taglineName: 'سيراميكا الزهراء', tagline: 'جودة • تنوع • ثقة',
-        footerHelpTitle: 'نحن دائمًا هنا لمساعدتك', footerHelpText: 'تواصل معنا عبر أي من قنوات الدعم التالية',
+    footerHelpTitle: 'نحن دائمًا هنا لمساعدتك', footerHelpText: 'تواصل معنا عبر أي من قنوات الدعم التالية',
     callUs: 'اتصل بنا:', emailUs: 'راسلنا عبر البريد:',
     newsletterTitle: 'اشترك في النشرة البريدية', newsletterText: 'أدخل بريدك الإلكتروني لتصلك آخر العروض والمنتجات الجديدة.',
     newsletterPlaceholder: 'أدخل بريدك الإلكتروني', subscribe: 'اشتراك',
@@ -38,7 +38,10 @@ const I18N = {
     invalid_phone: 'رقم التليفون غير صحيح. اكتب رقم موبايل مصري من 11 رقم (مثال: 01012345678).', invalid_message: 'الرسالة لازم تكون 5 أحرف على الأقل.',
     server_error: 'حصل خطأ في السيرفر، جرّب تاني بعد شوية.',
     addressLabel: 'العنوان:',
-    openMap: 'افتح في خرائط جوجل'
+    openMap: 'افتح في خرائط جوجل',
+    notFoundTitle: 'الصفحة غير موجودة', notFoundText: 'الرابط اللي فتحته غير صحيح أو الصفحة اتنقلت.', 
+    backHome: 'الرجوع للرئيسية',
+    subscribed: 'تم الاشتراك ✓', subscribeFail: 'تعذر الاشتراك'
   },
   en: {
     deliverTo: 'Deliver to', egypt: 'Egypt', search: 'Search', searchPlaceholder: 'What are you looking for?',
@@ -54,7 +57,7 @@ const I18N = {
     invalid_name: 'Enter your name (at least 2 characters).', invalid_email: 'Invalid email address.',
     weak_password: 'Password must be at least 8 characters.', email_exists: 'This email is already registered.',
     invalid_credentials: 'Incorrect email or password.', too_many_requests: 'Too many attempts. Try again later.',
-        network: 'Could not reach the server. Make sure it is running.',
+    network: 'Could not reach the server. Make sure it is running.',
     aboutTitle: 'About us', aboutWelcome: 'Welcome to Ceramica El-Zahraa',
     aboutIntro1: 'At Ceramica El-Zahraa, we believe every space deserves to be both beautiful and practical. That is why we offer a wide range of home finishing products, including ceramic, porcelain, sanitary ware, mixers and bathroom accessories, to help you design and furnish your home to suit your taste and needs.',
     aboutIntro2: 'We always focus on high-quality products, a varied selection and excellent service, choosing products from trusted brands at competitive prices.',
@@ -66,7 +69,7 @@ const I18N = {
     w3t: 'Service that cares', w3d: 'We help you choose the right products for your space and needs, and aim for a comfortable, pleasant shopping experience.',
     w4t: 'Competitive prices', w4d: 'We always aim to offer the best value for money while keeping quality and variety.',
     taglineName: 'Ceramica El-Zahraa', tagline: 'Quality • Variety • Trust',
-        footerHelpTitle: "We're always here to help", footerHelpText: 'Reach us through any of the following channels',
+    footerHelpTitle: "We're always here to help", footerHelpText: 'Reach us through any of the following channels',
     callUs: 'Call us:', emailUs: 'Email us:',
     newsletterTitle: 'Subscribe to our newsletter', newsletterText: 'Enter your email to get the latest offers and new products.',
     newsletterPlaceholder: 'Enter your email', subscribe: 'Subscribe',
@@ -76,11 +79,15 @@ const I18N = {
     contactIntro: 'Have a question or want to ask about a product? Send us a message and we will get back to you soon.',
     phoneLabel: 'Phone (optional)', messageLabel: 'Your message', sendMsg: 'Send',
     msgSent: 'We received your message. Thank you for contacting us.', contactInfo: 'Contact details',
-    invalid_phone: 'Invalid phone number. Enter an Egyptian mobile number of 11 digits (e.g. 01012345678).', 
+    invalid_phone: 'Invalid phone number. Enter an Egyptian mobile number of 11 digits (e.g. 01012345678).',
     invalid_message: 'Message must be at least 5 characters.',
     server_error: 'Server error, please try again shortly.',
     addressLabel: 'Address:',
-    openMap: 'Open in Google Maps'
+    openMap: 'Open in Google Maps',
+    notFoundTitle: 'Page not found',
+    notFoundText: 'The link you opened is incorrect or the page has moved.',
+    backHome: 'Back to home',
+    subscribed: 'Subscribed ✓', subscribeFail: 'Failed'
   }
 };
 
@@ -94,7 +101,9 @@ function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => (el.textContent = t(el.dataset.i18n)));
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => (el.placeholder = t(el.dataset.i18nPlaceholder)));
   document.querySelectorAll('[data-lang]').forEach(b => b.classList.toggle('is-active', b.dataset.lang === lang));
-  document.title = lang === 'ar' ? 'سيراميكا الزهراء' : 'Ceramica El-Zahraa';
+   const pageKey = document.documentElement.dataset.title;
+  const site = lang === 'ar' ? 'سيراميكا الزهراء' : 'Ceramica El-Zahraa';
+  document.title = pageKey ? `${t(pageKey)} | ${site}` : site;
   document.dispatchEvent(new Event('langchange'));
 }
 

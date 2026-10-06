@@ -80,14 +80,9 @@ function mailHref(email) {
       </div>
 
       <div class="container footer__grid">
-        <div class="footer__brand">
+                <div class="footer__brand">
           <img src="assets/images/logo.png" alt="Ceramica El-Zahraa">
-          <h3>${t('newsletterTitle')}</h3>
-          <p>${t('newsletterText')}</p>
-          <form class="newsletter" id="newsletterForm">
-            <input type="email" required placeholder="${t('newsletterPlaceholder')}" aria-label="email">
-            <button type="submit">${t('subscribe')}</button>
-          </form>
+          <p>${t('tagline')}</p>
         </div>
 
         <nav>
@@ -124,9 +119,6 @@ function mailHref(email) {
         <p>© ${new Date().getFullYear()} ${t('taglineName')} – ${t('rights')}</p>
       </div>
     </footer>`;
-
-    // TODO: اربط الاشتراك بالسيرفر (لسه مش بيحفظ الإيميل)
-    mount.querySelector('#newsletterForm').addEventListener('submit', e => e.preventDefault());
   }
 
   document.addEventListener('langchange', render);
