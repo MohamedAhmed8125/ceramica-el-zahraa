@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/mobile.css">
   <link rel="stylesheet" href="css/auth.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="auth-page">
   <div class="auth-card">
@@ -41,6 +42,10 @@
       <p class="form-error" id="formError" role="alert" hidden></p>
       <button type="submit" class="btn btn--primary auth-submit" id="submitBtn"></button>
     </form>
+    <div class="google-box" id="googleBox" hidden>
+      <div class="divider"><span data-i18n="orDivider"></span></div>
+      <div id="googleBtn"></div>
+    </div>
   </div>
 
   <script src="js/i18n.js"></script>

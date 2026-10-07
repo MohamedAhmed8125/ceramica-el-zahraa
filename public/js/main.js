@@ -48,7 +48,11 @@ function buildSection(el) {
 const renderProducts = () => document.querySelectorAll('.products').forEach(buildSection);
 
 document.addEventListener('click', e => {
-  if (e.target.classList.contains('add')) $('#cartCount').textContent = ++cart;
+  if (e.target.classList.contains('add')) {
+    const c = $('#cartCount');
+    c.textContent = ++cart;
+    c.hidden = false;
+  }
 });
 
 /* ---------- Account ---------- */
@@ -56,14 +60,17 @@ function renderAccount() {
   const a = $('#accountLink');
   const [small, strong] = a.children;
   if (currentUser) {
+    a.classList.remove('login-btn');
+    small.hidden = false;
     small.textContent = t('hello');
     strong.textContent = currentUser.name;
     if (currentUser.role === 'admin') a.setAttribute('href', 'admin.html');
     else a.removeAttribute('href');
     $('#logoutBtn').hidden = false;
   } else {
-    small.textContent = t('login');
-    strong.textContent = t('myAccount');
+    a.classList.add('login-btn');
+    small.hidden = true;
+    strong.textContent = t('login');
     a.setAttribute('href', 'login.html');
     $('#logoutBtn').hidden = true;
   }

@@ -118,3 +118,15 @@ button, input { font: inherit; border: 0; background: none; cursor: pointer; }
 .logout { color: #fff; background: rgba(255,255,255,.12); padding: 10px 14px; border-radius: var(--radius); }
 .logout:hover { background: rgba(255,255,255,.22); }
 [hidden] { display: none !important; }
+
+/* ===== زرار تسجيل الدخول ===== */
+.header__item.login-btn { flex-direction: row; align-items: center; background: var(--orange); color: #111; padding: 10px 20px; border-radius: var(--radius); }
+.header__item.login-btn strong { font-size: 1rem; font-weight: 700; }
+.header__item.login-btn:hover { background: var(--orange-dark); }
+
+/* ===== السلة ===== */
+.cart-btn { position: relative; display: inline-flex; align-items: center; gap: 8px; }
+.cart-btn svg { width: 24px; height: 24px; fill: currentColor; }
+.cart-btn .cart-label { background: none; padding: 0; margin: 0; border-radius: 0; color: inherit; font-size: inherit; }
+.cart-btn .cart-count { position: absolute; top: -7px; inset-inline-end: -7px; min-width: 20px; height: 20px; padding: 0 5px; margin: 0; border-radius: 10px; background: var(--orange); color: #111; font-size: .75rem; font-weight: 800; display: grid; place-items: center; }
+@media (max-width: 900px) { .cart-btn .cart-label { display: none; } }

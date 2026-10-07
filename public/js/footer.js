@@ -32,7 +32,6 @@ function mailHref(email) {
 
 (function () {
   const C = FOOTER_CONFIG;
-  document.querySelectorAll('.whatsapp').forEach(a => { if (C.social.whatsapp) a.href = C.social.whatsapp; });
   const mount = document.getElementById('site-footer');
   if (!mount) return;
 

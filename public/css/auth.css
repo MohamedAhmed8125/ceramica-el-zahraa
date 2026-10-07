@@ -14,3 +14,7 @@
 .form-error { background: #fdecea; color: #b3261e; padding: 9px 12px; border-radius: 6px; margin-bottom: 12px; font-size: .92rem; }
 .auth-submit { width: 100%; padding: 12px; font-size: 1rem; }
 .auth-submit:disabled { opacity: .6; cursor: wait; }
+.google-box { margin-top: 18px; }
+.divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: .9rem; margin-bottom: 14px; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+#googleBtn { display: flex; justify-content: center; min-height: 44px; }

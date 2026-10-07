@@ -41,7 +41,8 @@ const I18N = {
     openMap: 'افتح في خرائط جوجل',
     notFoundTitle: 'الصفحة غير موجودة', notFoundText: 'الرابط اللي فتحته غير صحيح أو الصفحة اتنقلت.', 
     backHome: 'الرجوع للرئيسية',
-    subscribed: 'تم الاشتراك ✓', subscribeFail: 'تعذر الاشتراك'
+    subscribed: 'تم الاشتراك ✓', subscribeFail: 'تعذر الاشتراك',
+    orDivider: 'أو', google_failed: 'تعذر الدخول بجوجل، جرّب تاني.', google_unverified: 'إيميل جوجل ده غير مؤكد.'
   },
   en: {
     deliverTo: 'Deliver to', egypt: 'Egypt', search: 'Search', searchPlaceholder: 'What are you looking for?',
@@ -87,7 +88,8 @@ const I18N = {
     notFoundTitle: 'Page not found',
     notFoundText: 'The link you opened is incorrect or the page has moved.',
     backHome: 'Back to home',
-    subscribed: 'Subscribed ✓', subscribeFail: 'Failed'
+    subscribed: 'Subscribed ✓', subscribeFail: 'Failed',
+    orDivider: 'or', google_failed: 'Google sign-in failed. Please try again.', google_unverified: 'This Google email is not verified.'
   }
 };
 

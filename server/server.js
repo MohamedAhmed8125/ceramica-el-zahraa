@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
+const { OAuth2Client } = require('google-auth-library');
 
 const SECRET = process.env.JWT_SECRET;
 if (!SECRET || SECRET.length < 32) {
@@ -17,6 +18,8 @@ const PORT = process.env.PORT || 3000;
 const IS_PROD = process.env.NODE_ENV === 'production';
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 const isAdmin = u => !!ADMIN_EMAIL && u.email === ADMIN_EMAIL;
 const DB_FILE = path.join(__dirname, '..', 'data', 'users.json');
 const COOKIE = 'token';
@@ -96,8 +99,8 @@ app.post('/api/login', limiter, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   const user = (await readUsers()).find(u => u.email === email);
-  const ok = await bcrypt.compare(password, user ? user.passwordHash : DUMMY_HASH);
-  if (!user || !ok) return res.status(401).json({ error: 'invalid_credentials' });
+  const ok = await bcrypt.compare(password, user && user.passwordHash ? user.passwordHash : DUMMY_HASH);
+  if (!user || !user.passwordHash || !ok) return res.status(401).json({ error: 'invalid_credentials' });
   setCookie(res, user);
   res.json({ user: publicUser(user) });
 });
@@ -105,6 +108,44 @@ app.post('/api/login', limiter, async (req, res) => {
 app.post('/api/logout', (req, res) => {
   res.clearCookie(COOKIE);
   res.json({ ok: true });
+});
+
+app.get('/api/config', (req, res) => res.json({ googleClientId: GOOGLE_CLIENT_ID }));
+
+app.post('/api/auth/google', limiter, async (req, res) => {
+  if (!googleClient) return res.status(503).json({ error: 'google_failed' });
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: String(req.body.credential || ''),
+      audience: GOOGLE_CLIENT_ID
+    });
+    payload = ticket.getPayload();
+  } catch (err) {
+    console.error('Google verify failed:', err.message);
+    return res.status(401).json({ error: 'google_failed' });
+  }
+  if (!payload || !payload.email || payload.email_verified !== true) {
+    return res.status(401).json({ error: 'google_unverified' });
+  }
+
+  const email = payload.email.toLowerCase();
+  const name = String(payload.name || email.split('@')[0]).trim().slice(0, 60);
+
+  const user = await updateUsers(users => {
+    let u = users.find(x => x.email === email);
+    if (!u) {
+      u = { id: crypto.randomUUID(), name, email, passwordHash: null, googleId: payload.sub, createdAt: new Date().toISOString() };
+      users.push(u);
+    } else if (!u.googleId) {
+      u.googleId = payload.sub;
+    }
+    return u;
+  });
+
+  setCookie(res, user);
+  res.json({ user: publicUser(user) });
 });
 
 app.get('/api/me', auth, (req, res) => res.json({ user: publicUser(req.user) }));
@@ -223,7 +264,7 @@ app.post('/api/admin/password', limiter, adminOnly, async (req, res) => {
   const current = String(req.body.current || '');
   const next = String(req.body.next || '');
   if (next.length < 8 || next.length > 100) return res.status(400).json({ error: 'weak_password' });
-  if (!(await bcrypt.compare(current, req.user.passwordHash))) {
+  if (!req.user.passwordHash || !(await bcrypt.compare(current, req.user.passwordHash))) {
     return res.status(401).json({ error: 'invalid_credentials' });
   }
   const passwordHash = await bcrypt.hash(next, 12);

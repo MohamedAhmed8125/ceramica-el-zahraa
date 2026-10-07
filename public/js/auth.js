@@ -49,3 +49,51 @@ form.addEventListener('submit', async e => {
 });
 
 applyLang();
+
+/* ---------- الدخول بجوجل ---------- */
+let googleReady = false;
+
+function renderGoogleButton() {
+  const box = document.getElementById('googleBtn');
+  box.innerHTML = '';
+  google.accounts.id.renderButton(box, {
+    theme: 'outline',
+    size: 'large',
+    shape: 'rectangular',
+    text: 'continue_with',
+    locale: lang === 'ar' ? 'ar' : 'en',
+    width: Math.min(box.offsetWidth || 320, 400)
+  });
+}
+
+async function onGoogle(resp) {
+  errorBox.hidden = true;
+  try {
+    const r = await fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: resp.credential })
+    });
+    const data = await r.json().catch(() => ({}));
+    if (r.ok) { location.href = '/'; return; }
+    showError(data.error || 'network');
+  } catch { showError('network'); }
+}
+
+async function initGoogle() {
+  let clientId = '';
+  try { clientId = (await (await fetch('/api/config')).json()).googleClientId; } catch {}
+  if (!clientId) return; // من غير Client ID الزرار مش بيظهر
+
+  const start = () => {
+    google.accounts.id.initialize({ client_id: clientId, callback: onGoogle });
+    document.getElementById('googleBox').hidden = false;
+    renderGoogleButton();
+    googleReady = true;
+  };
+  if (window.google && google.accounts) start();
+  else window.addEventListener('load', start);
+}
+
+document.addEventListener('langchange', () => { if (googleReady) renderGoogleButton(); });
+initGoogle();
