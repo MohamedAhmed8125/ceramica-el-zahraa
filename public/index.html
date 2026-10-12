@@ -17,6 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/banner.css">
 </head>
 <body>
   <header class="header">
@@ -73,13 +74,11 @@
   </nav>
 
   <main>
-    <section class="container hero">
-      <img src="assets/images/banner.jpg" alt="" onerror="this.style.display='none'">
-      <div class="hero__text">
-        <h1 data-i18n="heroTitle"></h1>
-        <p data-i18n="heroText"></p>
-        <a href="#" class="btn btn--primary" data-i18n="shopNow"></a>
-      </div>
+    <section class="container hero-slider" id="heroSlider" aria-label="Banners">
+      <div id="heroTrack"></div>
+      <button type="button" class="hero-arrow hero-arrow--prev" id="heroPrev" aria-label="Previous"></button>
+      <button type="button" class="hero-arrow hero-arrow--next" id="heroNext" aria-label="Next"></button>
+      <div class="hero-dots" id="heroDots"></div>
     </section>
 
     <section class="container products" data-section="deals" data-title-key="dealsTitle"></section>
@@ -92,6 +91,7 @@
   <script src="js/footer.js"></script>
   <script src="js/products.js"></script>   <!-- ده في index.html بس -->
   <script src="js/menu.js"></script>
+  <script src="js/banner.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

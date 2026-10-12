@@ -201,7 +201,7 @@ view.addEventListener('submit', async e => {
 });
 
 /* ---------- التبويبات ---------- */
-const tabs = { overview: showOverview, messages: showMessages, users: showUsers, settings: showSettings };
+const tabs = { overview: showOverview, messages: showMessages, users: showUsers, banners: showBanners, settings: showSettings };
 async function openTab(name) {
   document.querySelectorAll('.admin__tabs button').forEach(b => b.classList.toggle('is-active', b.dataset.tab === name));
   view.innerHTML = '<div class="empty">جاري التحميل...</div>';
@@ -220,6 +220,160 @@ document.querySelector('.admin__tabs').addEventListener('click', e => {
 document.getElementById('logout').addEventListener('click', async () => {
   await fetch('/api/logout', { method: 'POST' });
   location.href = '/';
+});
+
+/* ---------- البانر ---------- */
+let allBanners = [];
+let bannerEditing = null; // 'new' للإضافة، أو id للتعديل
+
+async function showBanners() {
+  allBanners = (await api('/api/admin/banners')).banners;
+  renderBannerList();
+}
+
+function bannerRowHTML(b, i) {
+  return `
+    <article class="brow ${b.active ? '' : 'is-off'}" data-id="${esc(b.id)}">
+      <div class="brow__img">${b.desktop ? `<img src="${esc(b.desktop)}" alt="">` : '<span>بدون صورة</span>'}</div>
+      <div class="brow__info">
+        <strong>بانر ${i + 1}</strong>
+        <div class="brow__meta">
+          <span class="chip ${b.active ? 'chip--read' : 'chip--off'}">${b.active ? 'ظاهر' : 'مخفي'}</span>
+          <span>${b.mobile ? 'نسخة موبايل ✓' : 'من غير نسخة موبايل'}</span>
+        </div>
+      </div>
+      <div class="brow__btns">
+        <button type="button" data-act="banner-up" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button type="button" data-act="banner-down" ${i === allBanners.length - 1 ? 'disabled' : ''}>↓</button>
+        <button type="button" data-act="banner-edit">تعديل</button>
+        <button type="button" data-act="banner-toggle">${b.active ? 'إخفاء' : 'إظهار'}</button>
+        <button type="button" class="danger" data-act="banner-delete">حذف</button>
+      </div>
+    </article>`;
+}
+
+function renderBannerList() {
+  view.innerHTML = `
+    <div class="toolbar">
+      <strong>${allBanners.length} بانر</strong>
+      <button type="button" class="btn btn--primary" data-act="banner-new">+ إضافة بانر</button>
+    </div>
+    ${allBanners.length
+      ? allBanners.map(bannerRowHTML).join('')
+      : '<div class="empty">مفيش بانرات لسه. الصفحة الرئيسية بتعرض بانر افتراضي لحد ما تضيف.</div>'}`;
+}
+
+function renderBannerForm(b) {
+  const isNew = !b;
+  b = b || { active: true, desktop: '', mobile: '' };
+  view.innerHTML = `
+    <form id="bannerForm" class="panel panel--wide" novalidate>
+      <h2>${isNew ? 'إضافة بانر' : 'تعديل البانر'}</h2>
+      <div class="grid2">
+        <div class="field">
+          <span>صورة الكمبيوتر (1920×430)${isNew ? ' - مطلوبة' : ''}</span>
+          ${b.desktop ? `<img class="thumb" src="${esc(b.desktop)}" alt="">` : ''}
+          <input type="file" name="desktop" accept="image/jpeg,image/png,image/webp" data-ratio="4.465">
+          <small class="hint" data-hint>${b.desktop ? 'سيبها فاضية لو مش عايز تغيّر الصورة.' : ''}</small>
+        </div>
+        <div class="field">
+          <span>صورة الموبايل (1080×720) - اختياري</span>
+          ${b.mobile ? `<img class="thumb" src="${esc(b.mobile)}" alt="">` : ''}
+          <input type="file" name="mobile" accept="image/jpeg,image/png,image/webp" data-ratio="1.5">
+          <small class="hint" data-hint></small>
+          ${b.mobile ? '<label class="check"><input type="checkbox" name="removeMobile" value="true"> احذف صورة الموبايل</label>' : ''}
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" name="active" ${b.active ? 'checked' : ''}> ظاهر في الموقع</label>
+      <p class="form-msg" id="bMsg" role="alert" hidden></p>
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">حفظ</button>
+        <button type="button" class="btn btn--outline" data-act="banner-cancel">إلغاء</button>
+      </div>
+    </form>`;
+}
+
+view.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-act^="banner-"]');
+  if (!btn) return;
+  const row = btn.closest('.brow');
+  const id = row ? row.dataset.id : null;
+  const b = id ? allBanners.find(x => x.id === id) : null;
+  try {
+    switch (btn.dataset.act) {
+      case 'banner-new': bannerEditing = 'new'; renderBannerForm(null); break;
+      case 'banner-edit': bannerEditing = id; renderBannerForm(b); break;
+      case 'banner-cancel': renderBannerList(); break;
+      case 'banner-up':
+      case 'banner-down':
+        await api(`/api/admin/banners/${id}/move`, { method: 'PATCH', body: JSON.stringify({ dir: btn.dataset.act === 'banner-up' ? -1 : 1 }) });
+        await showBanners();
+        break;
+      case 'banner-toggle':
+        await api('/api/admin/banners/' + id, { method: 'PATCH', body: JSON.stringify({ active: !b.active }) });
+        await showBanners();
+        break;
+      case 'banner-delete':
+        if (!confirm('متأكد إنك عايز تحذف البانر ده؟')) return;
+        await api('/api/admin/banners/' + id, { method: 'DELETE' });
+        await showBanners();
+        break;
+    }
+  } catch { alert('حصل خطأ، جرّب تاني.'); }
+});
+
+view.addEventListener('submit', async e => {
+  if (e.target.id !== 'bannerForm') return;
+  e.preventDefault();
+  const f = e.target;
+  const msg = document.getElementById('bMsg');
+  const show = text => { msg.textContent = text; msg.hidden = false; };
+  if (bannerEditing === 'new' && !f.desktop.files[0]) return show('ارفع صورة الكمبيوتر.');
+
+  for (const name of ['desktop', 'mobile']) {
+    const file = f[name].files[0];
+    if (file && file.size > 2 * 1024 * 1024) return show('حجم الصورة لازم يكون أقل من 2 ميجابايت.');
+  }
+
+  const fd = new FormData(f);
+  fd.set('active', f.active.checked ? 'true' : 'false');
+  const submitBtn = f.querySelector('button[type=submit]');
+  submitBtn.disabled = true;
+  try {
+    const isNew = bannerEditing === 'new';
+    const r = await fetch(isNew ? '/api/admin/banners' : '/api/admin/banners/' + bannerEditing, {
+      method: isNew ? 'POST' : 'PUT',
+      body: fd
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'error');
+    await showBanners();
+  } catch (err) {
+    show({
+      invalid_link: 'الرابط لازم يبدأ بـ / أو http:// أو https://',
+      bad_image: 'الصورة لازم تكون JPG أو PNG أو WebP.',
+      file_too_large: 'حجم الصورة لازم يكون أقل من 2 ميجابايت.',
+      banner_empty: 'ارفع صورة الكمبيوتر.'
+    }[err.message] || 'حصل خطأ، جرّب تاني.');
+    submitBtn.disabled = false;
+  }
+});
+
+// تنبيه لو مقاس الصورة بعيد عن المناسب
+view.addEventListener('change', e => {
+  const input = e.target;
+  if (!input.matches('#bannerForm input[type=file]')) return;
+  const hint = input.parentElement.querySelector('[data-hint]');
+  const file = input.files[0];
+  if (!file) { hint.textContent = ''; return; }
+  const img = new Image();
+  img.onload = () => {
+    const target = Number(input.dataset.ratio);
+    const off = Math.abs(img.width / img.height - target) / target > 0.15;
+    hint.textContent = `${img.width}×${img.height}` + (off ? ' - النسبة بعيدة عن المقاس المناسب، ممكن الصورة تتقص.' : ' ✓');
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(file);
 });
 
 /* ---------- البداية: التأكد إنه أدمن ---------- */

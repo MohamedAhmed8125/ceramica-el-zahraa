@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
+const multer = require('multer');
 const { OAuth2Client } = require('google-auth-library');
 
 const SECRET = process.env.JWT_SECRET;
@@ -272,6 +273,138 @@ app.post('/api/admin/password', limiter, adminOnly, async (req, res) => {
     const u = users.find(x => x.id === req.user.id);
     if (u) u.passwordHash = passwordHash;
   });
+  res.json({ ok: true });
+});
+
+/* ---------- البانر ---------- */
+const BANNERS_FILE = path.join(__dirname, '..', 'data', 'banners.json');
+const BANNER_DIR = path.join(__dirname, '..', 'public', 'uploads', 'banners');
+let bannerQueue = Promise.resolve();
+const readBanners = async () => {
+  try { return JSON.parse(await fs.readFile(BANNERS_FILE, 'utf8')); }
+  catch { return []; }
+};
+const updateBanners = fn => {
+  const run = bannerQueue.catch(() => {}).then(async () => {
+    const list = await readBanners();
+    const result = await fn(list);
+    await fs.writeFile(BANNERS_FILE, JSON.stringify(list, null, 2));
+    return result;
+  });
+  bannerQueue = run.catch(() => {});
+  return run;
+};
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024, files: 2 } });
+const bannerFiles = upload.fields([{ name: 'desktop', maxCount: 1 }, { name: 'mobile', maxCount: 1 }]);
+const handleUpload = (req, res, next) => bannerFiles(req, res, err =>
+  err ? res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'file_too_large' : 'upload_failed' }) : next());
+
+// بنتأكد من نوع الصورة من محتواها مش من اسمها
+function detectExt(buf) {
+  if (buf.length < 12) return null;
+  if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return 'jpg';
+  if (buf.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))) return 'png';
+  if (buf.slice(0, 4).toString('ascii') === 'RIFF' && buf.slice(8, 12).toString('ascii') === 'WEBP') return 'webp';
+  return null;
+}
+const validImages = files => [files.desktop?.[0], files.mobile?.[0]].every(f => !f || detectExt(f.buffer));
+async function saveImage(file) {
+  const ext = detectExt(file.buffer);
+  await fs.mkdir(BANNER_DIR, { recursive: true });
+  const name = `${crypto.randomUUID()}.${ext}`;
+  await fs.writeFile(path.join(BANNER_DIR, name), file.buffer);
+  return `/uploads/banners/${name}`;
+}
+async function removeImage(url) {
+  if (!url || !url.startsWith('/uploads/banners/')) return;
+  await fs.unlink(path.join(BANNER_DIR, path.basename(url))).catch(() => {});
+}
+
+app.get('/api/admin/banners', adminOnly, async (req, res) => {
+  res.json({ banners: await readBanners() });
+});
+
+// للزوار: البانرات الظاهرة فقط
+app.get('/api/banners', async (req, res) => {
+  const list = (await readBanners())
+    .filter(b => b.active && b.desktop)
+    .map(({ id, desktop, mobile }) => ({ id, desktop, mobile }));
+  res.json({ banners: list });
+});
+
+// للأدمن
+app.post('/api/admin/banners', adminOnly, handleUpload, async (req, res) => {
+  const files = req.files || {};
+  if (!files.desktop) return res.status(400).json({ error: 'banner_empty' });
+  if (!validImages(files)) return res.status(400).json({ error: 'bad_image' });
+  try {
+    const desktop = await saveImage(files.desktop[0]);
+    const mobile = files.mobile ? await saveImage(files.mobile[0]) : '';
+    const banner = await updateBanners(list => {
+      const b = { id: crypto.randomUUID(), active: req.body.active !== 'false', desktop, mobile, createdAt: new Date().toISOString() };
+      list.push(b);
+      return b;
+    });
+    res.status(201).json({ banner });
+  } catch { res.status(500).json({ error: 'server_error' }); }
+});
+
+app.put('/api/admin/banners/:id', adminOnly, handleUpload, async (req, res) => {
+  const files = req.files || {};
+  if (!validImages(files)) return res.status(400).json({ error: 'bad_image' });
+  try {
+    const desktop = files.desktop ? await saveImage(files.desktop[0]) : null;
+    const mobile = files.mobile ? await saveImage(files.mobile[0]) : null;
+    const removed = [];
+    const banner = await updateBanners(list => {
+      const b = list.find(x => x.id === req.params.id);
+      if (!b) return null;
+      b.active = req.body.active !== 'false';
+      if (desktop) { removed.push(b.desktop); b.desktop = desktop; }
+      if (mobile) { removed.push(b.mobile); b.mobile = mobile; }
+      else if (req.body.removeMobile === 'true') { removed.push(b.mobile); b.mobile = ''; }
+      return b;
+    });
+    if (!banner) {
+      await removeImage(desktop); await removeImage(mobile);
+      return res.status(404).json({ error: 'not_found' });
+    }
+    await Promise.all(removed.map(removeImage));
+    res.json({ banner });
+  } catch { res.status(500).json({ error: 'server_error' }); }
+});
+
+app.patch('/api/admin/banners/:id', adminOnly, async (req, res) => {
+  const ok = await updateBanners(list => {
+    const b = list.find(x => x.id === req.params.id);
+    if (!b) return false;
+    b.active = req.body.active === true;
+    return true;
+  });
+  ok ? res.json({ ok: true }) : res.status(404).json({ error: 'not_found' });
+});
+
+app.patch('/api/admin/banners/:id/move', adminOnly, async (req, res) => {
+  const dir = req.body.dir === -1 ? -1 : 1;
+  const ok = await updateBanners(list => {
+    const i = list.findIndex(x => x.id === req.params.id);
+    if (i < 0) return false;
+    const j = i + dir;
+    if (j >= 0 && j < list.length) [list[i], list[j]] = [list[j], list[i]];
+    return true;
+  });
+  ok ? res.json({ ok: true }) : res.status(404).json({ error: 'not_found' });
+});
+
+app.delete('/api/admin/banners/:id', adminOnly, async (req, res) => {
+  const removed = await updateBanners(list => {
+    const i = list.findIndex(x => x.id === req.params.id);
+    return i < 0 ? null : list.splice(i, 1)[0];
+  });
+  if (!removed) return res.status(404).json({ error: 'not_found' });
+  await removeImage(removed.desktop);
+  await removeImage(removed.mobile);
   res.json({ ok: true });
 });
 
