@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const multer = require('multer');
+const nodemailer = require('nodemailer');
 const { OAuth2Client } = require('google-auth-library');
 
 const SECRET = process.env.JWT_SECRET;
@@ -21,6 +22,12 @@ const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
+const SITE_URL = (process.env.SITE_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
+const MAIL_USER = process.env.MAIL_USER || '';
+const MAIL_PASS = (process.env.MAIL_APP_PASSWORD || '').replace(/\s/g, '');
+const mailer = MAIL_USER && MAIL_PASS
+  ? nodemailer.createTransport({ service: 'gmail', auth: { user: MAIL_USER, pass: MAIL_PASS } })
+  : null;
 const isAdmin = u => !!ADMIN_EMAIL && u.email === ADMIN_EMAIL;
 const DB_FILE = path.join(__dirname, '..', 'data', 'users.json');
 const COOKIE = 'token';
@@ -405,6 +412,91 @@ app.delete('/api/admin/banners/:id', adminOnly, async (req, res) => {
   if (!removed) return res.status(404).json({ error: 'not_found' });
   await removeImage(removed.desktop);
   await removeImage(removed.mobile);
+  res.json({ ok: true });
+});
+
+/* ---------- نسيت كلمة المرور ---------- */
+function makeStore(file) {
+  let queue = Promise.resolve();
+  const read = async () => {
+    try { return JSON.parse(await fs.readFile(file, 'utf8')); }
+    catch { return []; }
+  };
+  const update = fn => {
+    const run = queue.catch(() => {}).then(async () => {
+      const list = await read();
+      const result = await fn(list);
+      await fs.writeFile(file, JSON.stringify(list, null, 2));
+      return result;
+    });
+    queue = run.catch(() => {});
+    return run;
+  };
+  return { read, update };
+}
+const resets = makeStore(path.join(__dirname, '..', 'data', 'resets.json'));
+const sha256 = s => crypto.createHash('sha256').update(s).digest('hex');
+
+async function sendResetMail(user, link, lng) {
+  if (!mailer) {
+    if (!IS_PROD) console.log(`\n[تجربة] رابط استرجاع كلمة المرور لـ ${user.email}:\n${link}\n`);
+    else console.warn('إعدادات الإيميل ناقصة، مفيش إيميل اتبعت.');
+    return;
+  }
+  const ar = lng !== 'en';
+  await mailer.sendMail({
+    from: `"سيراميكا الزهراء | Ceramica El-Zahraa" <${MAIL_USER}>`,
+    to: user.email,
+    subject: ar ? 'استرجاع كلمة المرور' : 'Reset your password',
+    text: ar
+      ? `أهلاً ${user.name}،\n\nعشان تغيّر كلمة المرور افتح الرابط ده (صالح لمدة ساعة واحدة):\n${link}\n\nلو أنت ماطلبتش ده، تجاهل الرسالة وحسابك في أمان.`
+      : `Hello ${user.name},\n\nOpen this link to choose a new password (valid for one hour):\n${link}\n\nIf you did not request this, ignore this email and your account stays safe.`
+  });
+}
+
+app.post('/api/forgot', limiter, async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const lng = req.body.lang === 'en' ? 'en' : 'ar';
+  if (!EMAIL_RE.test(email) || email.length > 120) return res.status(400).json({ error: 'invalid_email' });
+
+  res.json({ ok: true }); // نفس الرد دايماً، سواء الإيميل مسجل أو لأ
+
+  try {
+    const user = (await readUsers()).find(u => u.email === email);
+    if (!user) return;
+    const token = crypto.randomBytes(32).toString('hex');
+    await resets.update(list => {
+      const keep = list.filter(r => r.userId !== user.id && r.expires > Date.now());
+      list.length = 0;
+      list.push(...keep, { hash: sha256(token), userId: user.id, expires: Date.now() + 60 * 60 * 1000 });
+    });
+    await sendResetMail(user, `${SITE_URL}/reset.html?token=${token}`, lng);
+  } catch (err) {
+    console.error('forgot failed:', err.message);
+  }
+});
+
+app.post('/api/reset', limiter, async (req, res) => {
+  const token = String(req.body.token || '');
+  const password = String(req.body.password || '');
+  if (password.length < 8 || password.length > 100) return res.status(400).json({ error: 'weak_password' });
+  if (!/^[a-f0-9]{64}$/.test(token)) return res.status(400).json({ error: 'invalid_token' });
+
+  const hash = sha256(token);
+  const userId = await resets.update(list => {
+    const i = list.findIndex(r => r.hash === hash && r.expires > Date.now());
+    if (i < 0) return null;
+    const { userId } = list[i];
+    for (let k = list.length - 1; k >= 0; k--) if (list[k].userId === userId) list.splice(k, 1);
+    return userId;
+  });
+  if (!userId) return res.status(400).json({ error: 'invalid_token' });
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  await updateUsers(users => {
+    const u = users.find(x => x.id === userId);
+    if (u) u.passwordHash = passwordHash;
+  });
   res.json({ ok: true });
 });
 

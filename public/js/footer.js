@@ -89,18 +89,14 @@ function mailHref(email) {
           <ul>
             <li><a href="about.html">${t('navAbout')}</a></li>
             <li><a href="contact.html">${t('contactUs')}</a></li>
+            <li><a href="privacy.html">${t('privacy')}</a></li>
           </ul>
         </nav>
 
         <nav>
           <h3>${t('shopByCat')}</h3>
-          <ul>
-            <li><a href="#">${t('navCeramic')}</a></li>
-            <li><a href="#">${t('navPorcelain')}</a></li>
-            <li><a href="#">${t('navSanitary')}</a></li>
-            <li><a href="#">${t('navMixers')}</a></li>
-            <li><a href="#">${t('navAccessories')}</a></li>
-            <li><a href="#">${t('navOffers')}</a></li>
+                    <ul>
+            ${CATEGORIES.map(c => `<li><a href="#">${lang === 'en' ? c.en : c.ar}</a></li>`).join('')}
           </ul>
         </nav>
 

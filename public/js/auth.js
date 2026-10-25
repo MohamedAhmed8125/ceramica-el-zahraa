@@ -10,6 +10,7 @@ function refresh() {
   form.password.autocomplete = reg ? 'new-password' : 'current-password';
   submitBtn.textContent = t(reg ? 'submitRegister' : 'submitLogin');
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('is-active', b.dataset.tab === mode));
+  document.getElementById('forgotLink').hidden = reg;
 }
 
 function showError(code) {

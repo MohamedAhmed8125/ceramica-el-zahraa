@@ -17,6 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/mega.css">
   <link rel="stylesheet" href="css/banner.css">
 </head>
 <body>
@@ -49,22 +50,12 @@
     </div>
   </header>
 
-   <div class="nav-overlay" id="navOverlay"></div>
+  <div class="nav-overlay" id="navOverlay"></div>
   <nav class="nav" id="mainNav">
     <div class="nav__top">
       <button type="button" class="nav__close" id="navClose" aria-label="Close">✕</button>
     </div>
-    <ul class="container nav__list">
-      <li><a href="/" class="is-active" data-i18n="navHome"></a></li>
-      <li><a href="#" data-i18n="navCeramic"></a></li>
-      <li><a href="#" data-i18n="navPorcelain"></a></li>
-      <li><a href="#" data-i18n="navSanitary"></a></li>
-      <li><a href="#" data-i18n="navMixers"></a></li>
-      <li><a href="#" data-i18n="navBasins"></a></li>
-      <li><a href="#" data-i18n="navAccessories"></a></li>
-      <li><a href="#" data-i18n="navOffers"></a></li>
-      <li><a href="about.html" data-i18n="navAbout"></a></li>
-    </ul>
+    <div class="container nav__row" id="navRow"></div>
     <div class="nav__extra">
       <div class="lang" role="group" aria-label="Language">
         <button type="button" data-lang="ar">عربي</button>
@@ -72,7 +63,7 @@
       </div>
     </div>
   </nav>
-
+    
   <main>
     <section class="container hero-slider" id="heroSlider" aria-label="Banners">
       <div id="heroTrack"></div>
@@ -88,7 +79,9 @@
     <div id="site-footer"></div>
 
   <script src="js/i18n.js"></script>
+  <script src="js/categories.js"></script>
   <script src="js/footer.js"></script>
+  <script src="js/nav.js"></script>
   <script src="js/products.js"></script>   <!-- ده في index.html بس -->
   <script src="js/menu.js"></script>
   <script src="js/banner.js"></script>

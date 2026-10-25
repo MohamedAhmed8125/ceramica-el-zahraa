@@ -1,0 +1,72 @@
+/* ===== شريط القوائم ===== */
+.nav__row { display: flex; align-items: stretch; }
+.nav__row .nav__list { flex: 1; justify-content: flex-start; gap: 2px; }
+.nav__list a.is-hot { color: #c4321a; }
+.nav__badge { background: #d4461f; color: #fff; font-size: .7rem; font-style: normal; font-weight: 700; padding: 1px 8px; border-radius: 20px; margin-inline-end: 6px; vertical-align: middle; }
+
+/* ===== زرار جميع الأقسام ===== */
+.mega { position: relative; flex: 0 0 340px; }
+.mega__btn { width: 100%; height: 100%; min-height: 54px; display: flex; align-items: center; gap: 12px; padding: 0 20px; font-weight: 800; font-size: 1.05rem; background: #fff; color: var(--text); }
+.mega__btn .chev { margin-inline-start: auto; }
+.mega__icon { display: grid; gap: 4px; }
+.mega__icon i { display: block; width: 20px; height: 2px; background: currentColor; }
+.mega.is-open .mega__btn { color: var(--orange-dark); }
+
+/* السهم */
+.chev { display: inline-block; width: 8px; height: 8px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); flex-shrink: 0; }
+html[dir="ltr"] .chev { transform: rotate(-135deg); }
+.chev--down, html[dir="ltr"] .chev--down { transform: rotate(-45deg); }
+.mega.is-open .mega__btn .chev--down { transform: rotate(135deg); }
+
+/* ===== عمود الأقسام ===== */
+.mega__drop { position: absolute; top: 100%; inset-inline-start: 0; width: 100%; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.18); border-radius: 0 0 var(--radius) var(--radius); display: none; z-index: 70; }
+.mega.is-open .mega__drop { display: block; }
+.mega__list { padding: 6px 0; }
+.mega__link { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 22px; font-weight: 600; border-bottom: 1px solid var(--border); }
+.mega__item:last-child .mega__link { border-bottom: 0; }
+.mega__badge { background: var(--orange); color: #111; font-size: .72rem; font-style: normal; font-weight: 700; padding: 1px 10px; border-radius: 20px; margin-inline-start: 6px; }
+
+/* ===== اللوحة الكبيرة ===== */
+.mega__panel { display: none; position: absolute; top: 0; inset-inline-start: 100%; width: calc(min(1700px, 92vw) - 340px); min-height: 100%; background: #fff; border-top: 4px solid #d9d9d9; box-shadow: 0 10px 30px rgba(0,0,0,.18); padding: 26px 34px; }
+.mega__cols { display: flex; flex-wrap: wrap; gap: 28px 52px; align-items: flex-start; }
+.mega__col { min-width: 150px; }
+.mega__head { display: block; font-weight: 800; color: var(--orange-dark); margin-bottom: 12px; }
+.mega__col li { margin-bottom: 11px; }
+.mega__col li a { color: #555; }
+.mega__col a:hover { color: var(--orange-dark); text-decoration: underline; }
+
+/* تعتيم باقي الصفحة */
+.mega-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 55; opacity: 0; visibility: hidden; transition: opacity .2s; }
+.mega-backdrop.is-on { opacity: 1; visibility: visible; }
+
+/* ===== كمبيوتر ===== */
+@media (min-width: 901px) {
+  .nav { z-index: 60; }
+  .mega__item.is-open > .mega__panel { display: block; }
+  .mega__item.is-open > .mega__link { color: var(--orange-dark); }
+}
+@media (min-width: 901px) and (hover: hover) {
+  .mega__item:hover > .mega__panel, .mega__item:focus-within > .mega__panel { display: block; }
+  .mega__item:hover > .mega__link, .mega__item:focus-within > .mega__link { color: var(--orange-dark); }
+}
+
+/* ===== موبايل: القايمة الجانبية ===== */
+@media (max-width: 900px) {
+  .mega-backdrop { display: none; }
+  .nav__row { display: block; flex: 1; padding: 0; }
+  .mega { flex: none; width: 100%; }
+  .mega__btn { padding: 15px 20px; border-bottom: 1px solid var(--border); }
+  .mega__drop { position: static; box-shadow: none; border-radius: 0; background: var(--bg-soft); }
+  .mega__list { padding: 0; }
+  .mega__link { padding: 13px 28px; }
+  .mega__panel { position: static; width: auto; min-height: 0; border-top: 0; box-shadow: none; padding: 6px 28px 14px; background: #fff; }
+  .mega__item.is-open > .mega__panel { display: block; }
+  .mega__item.is-open > .mega__link .chev { transform: rotate(-45deg); }
+  .mega__cols { flex-direction: column; gap: 14px; }
+  .nav__row .nav__list { display: block; }
+}
+
+@media (min-width: 901px) {
+  .nav__row .nav__list a { padding: 14px 12px; font-size: .95rem; }
+  .nav__row .nav__list { scrollbar-width: none; }
+}

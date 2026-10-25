@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/mega.css">
   <link rel="stylesheet" href="css/about.css">
   <link rel="stylesheet" href="css/contact.css">
 </head>
@@ -47,24 +48,13 @@
     <div class="nav__top">
       <button type="button" class="nav__close" id="navClose" aria-label="Close">✕</button>
     </div>
-    <ul class="container nav__list">
-      <li><a href="/" data-i18n="navHome"></a></li>
-      <li><a href="#" data-i18n="navCeramic"></a></li>
-      <li><a href="#" data-i18n="navPorcelain"></a></li>
-      <li><a href="#" data-i18n="navSanitary"></a></li>
-      <li><a href="#" data-i18n="navMixers"></a></li>
-      <li><a href="#" data-i18n="navBasins"></a></li>
-      <li><a href="#" data-i18n="navAccessories"></a></li>
-      <li><a href="#" data-i18n="navOffers"></a></li>
-      <li><a href="about.html" data-i18n="navAbout"></a></li>
-    </ul>
+    <div class="container nav__row" id="navRow"></div>
     <div class="nav__extra">
       <div class="lang" role="group" aria-label="Language">
         <button type="button" data-lang="ar">عربي</button>
         <button type="button" data-lang="en">EN</button>
       </div>
     </div>
-  </nav>
 
   <main>
     <section class="about-hero">
@@ -108,7 +98,9 @@
   <div id="site-footer"></div>
 
   <script src="js/i18n.js"></script>
+  <script src="js/categories.js"></script>
   <script src="js/footer.js"></script>
+  <script src="js/nav.js"></script>
   <script src="js/menu.js"></script>
   <script src="js/contact.js"></script>
   <script src="js/main.js"></script>

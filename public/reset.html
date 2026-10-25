@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-title="resetTitle">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>Ceramica El-Zahraa</title>
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body class="auth-page">
+  <div class="auth-card">
+    <a href="/" class="auth-logo"><img src="assets/images/logo.png" alt="Ceramica El-Zahraa"></a>
+    <div class="lang auth-lang" role="group">
+      <button type="button" data-lang="ar">عربي</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+
+    <h1 class="auth-title" data-i18n="resetTitle"></h1>
+
+    <form id="resetForm" novalidate>
+      <label class="field">
+        <span data-i18n="newPassword"></span>
+        <input type="password" name="password" autocomplete="new-password" minlength="8" required>
+      </label>
+      <label class="field">
+        <span data-i18n="confirmPassword"></span>
+        <input type="password" name="confirm" autocomplete="new-password" required>
+      </label>
+      <button type="submit" class="btn btn--primary auth-submit" data-i18n="saveNewPassword"></button>
+    </form>
+    <p class="form-error" id="formMsg" role="alert" hidden></p>
+    <p class="auth-foot"><a href="login.html" data-i18n="goLogin"></a></p>
+  </div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/recover.js"></script>
+</body>
+</html>

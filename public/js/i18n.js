@@ -42,7 +42,17 @@ const I18N = {
     notFoundTitle: 'الصفحة غير موجودة', notFoundText: 'الرابط اللي فتحته غير صحيح أو الصفحة اتنقلت.', 
     backHome: 'الرجوع للرئيسية',
     subscribed: 'تم الاشتراك ✓', subscribeFail: 'تعذر الاشتراك',
-    orDivider: 'أو', google_failed: 'تعذر الدخول بجوجل، جرّب تاني.', google_unverified: 'إيميل جوجل ده غير مؤكد.'
+    orDivider: 'أو', google_failed: 'تعذر الدخول بجوجل، جرّب تاني.', google_unverified: 'إيميل جوجل ده غير مؤكد.',
+    allCategories: 'جميع الأقسام',
+        forgotLink: 'نسيت كلمة المرور؟', forgotTitle: 'استرجاع كلمة المرور',
+    forgotText: 'اكتب إيميلك وهنبعتلك رابط تغيّر منه كلمة المرور.', sendLink: 'ابعت الرابط',
+    forgotSent: 'لو الإيميل ده مسجل عندنا، هيوصلك رابط الاسترجاع خلال دقايق. راجع الـ Spam كمان.',
+    resetTitle: 'كلمة مرور جديدة', newPassword: 'كلمة المرور الجديدة', confirmPassword: 'تأكيد كلمة المرور',
+    saveNewPassword: 'حفظ', resetDone: 'تم تغيير كلمة المرور. تقدر تسجّل دخول دلوقتي.',
+    goLogin: 'تسجيل الدخول', backToLogin: 'الرجوع لتسجيل الدخول',
+    password_mismatch: 'تأكيد كلمة المرور مش مطابق.',
+    invalid_token: 'الرابط غير صالح أو انتهت صلاحيته. اطلب رابط جديد.',
+    privacy: 'سياسة الخصوصية', agreePrefix: 'بتسجيلك أو دخولك، أنت موافق على'
   },
   en: {
     deliverTo: 'Deliver to', egypt: 'Egypt', search: 'Search', searchPlaceholder: 'What are you looking for?',
@@ -89,7 +99,17 @@ const I18N = {
     notFoundText: 'The link you opened is incorrect or the page has moved.',
     backHome: 'Back to home',
     subscribed: 'Subscribed ✓', subscribeFail: 'Failed',
-    orDivider: 'or', google_failed: 'Google sign-in failed. Please try again.', google_unverified: 'This Google email is not verified.'
+    orDivider: 'or', google_failed: 'Google sign-in failed. Please try again.', google_unverified: 'This Google email is not verified.',
+    allCategories: 'All categories',
+        forgotLink: 'Forgot your password?', forgotTitle: 'Reset your password',
+    forgotText: 'Enter your email and we will send you a link to choose a new password.', sendLink: 'Send link',
+    forgotSent: 'If this email is registered with us, a reset link will reach you within minutes. Check your spam folder too.',
+    resetTitle: 'New password', newPassword: 'New password', confirmPassword: 'Confirm password',
+    saveNewPassword: 'Save', resetDone: 'Your password has been changed. You can sign in now.',
+    goLogin: 'Sign in', backToLogin: 'Back to sign in',
+    password_mismatch: 'Passwords do not match.',
+    invalid_token: 'This link is invalid or has expired. Request a new one.',
+    privacy: 'Privacy policy', agreePrefix: 'By signing in or registering, you agree to our'
   }
 };
 
