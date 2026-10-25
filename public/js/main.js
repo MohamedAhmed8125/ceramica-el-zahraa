@@ -1,6 +1,5 @@
 const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits: 2 });
 const $ = s => document.querySelector(s);
-let cart = 0;
 let currentUser = null;
 
 /* ---------- Products ---------- */
@@ -47,13 +46,15 @@ function buildSection(el) {
 
 const renderProducts = () => document.querySelectorAll('.products').forEach(buildSection);
 
-document.addEventListener('click', e => {
-  if (e.target.classList.contains('add')) {
-    const c = $('#cartCount');
-    c.textContent = ++cart;
-    c.hidden = false;
-  }
-});
+function renderCartCount() {
+  const c = $('#cartCount');
+  if (!c || typeof Cart === 'undefined') return;
+  const n = Cart.count();
+  c.textContent = n;
+  c.hidden = n === 0;
+}
+document.addEventListener('cart:change', renderCartCount);
+window.addEventListener('storage', renderCartCount);
 
 /* ---------- Account ---------- */
 function renderAccount() {
@@ -94,3 +95,4 @@ $('#logoutBtn').addEventListener('click', async () => {
 document.addEventListener('langchange', () => { renderProducts(); renderAccount(); });
 applyLang();
 loadUser();
+renderCartCount();

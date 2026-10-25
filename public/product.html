@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>سيراميكا الزهراء</title>
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/mega.css">
+  <link rel="stylesheet" href="css/product.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container header__row">
+      <button type="button" class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">☰</button>
+      <a href="/" class="logo"><img src="assets/images/logo.png" alt="Ceramica El-Zahraa"></a>
+
+      <form class="search" role="search" onsubmit="return false">
+        <input type="search" data-i18n-placeholder="searchPlaceholder" aria-label="search">
+        <button type="submit" data-i18n="search"></button>
+      </form>
+
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="ar">عربي</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+
+      <a href="login.html" class="header__item" id="accountLink">
+        <small></small>
+        <strong></strong>
+      </a>
+      <button type="button" class="logout" id="logoutBtn" hidden data-i18n="logout"></button>
+
+      <a href="#" class="cart-btn" aria-label="Cart">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        <span class="cart-label" data-i18n="cart"></span>
+        <span class="cart-count" id="cartCount" hidden>0</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="nav-overlay" id="navOverlay"></div>
+  <nav class="nav" id="mainNav">
+    <div class="nav__top">
+      <button type="button" class="nav__close" id="navClose" aria-label="Close">✕</button>
+    </div>
+    <div class="container nav__row" id="navRow"></div>
+    <div class="nav__extra">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="ar">عربي</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+    <section id="product"></section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/categories.js"></script>
+  <script src="js/footer.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/catalog.js"></script>
+  <script src="js/product.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
