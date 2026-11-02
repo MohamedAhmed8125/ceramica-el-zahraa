@@ -5,3 +5,6 @@ data/messages.json
 data/banners.json
 public/uploads/
 data/resets.json
+data/orders.json
+Disallow: /cart.html
+Disallow: /checkout.html

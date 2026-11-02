@@ -3,3 +3,6 @@ Disallow: /api/
 Disallow: /login.html
 Disallow: /forgot.html
 Disallow: /reset.html
+data/orders.json
+Disallow: /cart.html
+Disallow: /checkout.html

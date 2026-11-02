@@ -1,0 +1,69 @@
+.co-title { font-size: 1.8rem; font-weight: 800; margin: 26px 0 8px; }
+
+/* خطوات */
+.steps { display: flex; list-style: none; margin: 18px 0 26px; padding: 0; }
+.steps li { flex: 1; text-align: center; position: relative; color: var(--muted); font-weight: 700; }
+.steps li::before { content: ''; position: absolute; top: 17px; left: 0; right: 0; height: 4px; background: #e6e6e6; }
+.steps li.is-on::before { background: var(--orange); }
+.steps i { position: relative; z-index: 1; display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #fff; border: 2px solid #ddd; font-style: normal; }
+.steps li.is-on i { border-color: var(--orange); color: var(--orange-dark); }
+.steps li.is-done i { background: var(--orange); color: #111; }
+.steps span { display: block; margin-top: 8px; }
+
+/* التخطيط */
+.co { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+.card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; margin-bottom: 18px; }
+.card h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 14px; color: var(--orange-dark); }
+.card__head { display: flex; justify-content: space-between; align-items: center; }
+.card p { margin-bottom: 6px; }
+.sub { font-size: 1.02rem; font-weight: 800; margin: 20px 0 10px; }
+.link { color: var(--orange-dark); text-decoration: underline; }
+
+.co__sum { position: sticky; top: 80px; margin-bottom: 0; }
+.co__sum ul, .co__sum-in ul { list-style: none; padding: 0; margin: 0 0 12px; }
+.co__sum li, .co__sum-in li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); text-align: start; }
+.co__sum li small, .co__sum-in li small { display: block; color: #777; }
+.co__sum li span, .co__sum-in li span { white-space: nowrap; font-weight: 700; }
+
+/* الحقول */
+.fgrid { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 4px; }
+.f { display: block; flex: 1 1 100%; }
+.f--half { flex: 1 1 calc(50% - 7px); min-width: 200px; }
+.f > span { display: block; font-weight: 600; margin-bottom: 4px; }
+.f > span b { color: #b3261e; }
+.f input, .f select, .f textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; background: #fff; }
+.f input, .f textarea { cursor: text; }
+.f input:focus, .f select:focus, .f textarea:focus { outline: 2px solid var(--orange); border-color: transparent; }
+.f.is-err input, .f.is-err select { border-color: #b3261e; }
+.ferr { display: block; color: #b3261e; font-size: .85rem; font-style: normal; margin-top: 4px; }
+
+/* اختيارات (طريقة الاستلام والدفع) */
+.opts { display: grid; gap: 10px; margin-bottom: 16px; }
+.opt { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--border); border-radius: 8px; padding: 14px; cursor: pointer; }
+.opt.is-on { border-color: var(--orange); background: #fffaf0; }
+.opt input { margin-top: 5px; accent-color: var(--orange-dark); }
+.opt b { display: block; }
+.opt small { display: block; color: #666; margin-top: 2px; line-height: 1.7; }
+
+.actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+.actions .btn { padding: 12px 28px; }
+.actions .btn:disabled { background: #ccc; cursor: not-allowed; }
+.cerr { background: #fdecea; color: #b3261e; padding: 10px 12px; border-radius: 6px; margin-top: 12px; }
+.cwarn { background: #fdf3f2; border: 1px solid #f0c4c0; color: #b3261e; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; }
+.cwarn a { text-decoration: underline; }
+.cnote { background: #fffaf0; border: 1px solid #ecd9a0; border-radius: 8px; padding: 10px 14px; margin: 14px 0; color: #6b5a1a; }
+
+/* صفحة التأكيد */
+.cdone { max-width: 720px; margin: 20px auto 40px; text-align: center; }
+.cdone__title { font-size: 1.6rem !important; }
+.cdone__no { font-size: 2.2rem; font-weight: 800; letter-spacing: .05em; margin: 4px 0 14px; }
+.cpay { background: #fffaf0; border: 1px solid #ecd9a0; border-radius: 8px; padding: 16px; margin: 18px 0; }
+.cpay h3 { font-weight: 800; margin-bottom: 6px; }
+.cpay__num { font-size: 1.8rem; font-weight: 800; color: var(--orange-dark); margin: 6px 0; }
+.cpay .btn { margin-top: 8px; padding: 10px 26px; }
+.co__sum-in { text-align: start; margin: 18px 0; }
+
+@media (max-width: 900px) {
+  .co { grid-template-columns: 1fr; }
+  .co__sum { position: static; order: -1; }
+}

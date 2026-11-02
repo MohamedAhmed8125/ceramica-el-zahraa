@@ -24,11 +24,13 @@ function updateBadge(unread) {
 async function showOverview() {
   const s = await api('/api/admin/stats');
   updateBadge(s.unread);
+  updateOrdersBadge(s.newOrders);
   view.innerHTML = `
     <div class="stats">
       <div class="stat"><strong>${s.users}</strong><span>مستخدم مسجل</span></div>
       <div class="stat"><strong>${s.messages}</strong><span>رسالة اتصل بنا</span></div>
       <div class="stat"><strong>${s.unread}</strong><span>رسالة غير مقروءة</span></div>
+      <div class="stat"><strong>${s.orders}</strong><span>طلب (${s.newOrders} جديد)</span></div>
     </div>`;
 }
 
@@ -201,7 +203,7 @@ view.addEventListener('submit', async e => {
 });
 
 /* ---------- التبويبات ---------- */
-const tabs = { overview: showOverview, messages: showMessages, users: showUsers, banners: showBanners, settings: showSettings };
+const tabs = { overview: showOverview, messages: showMessages, users: showUsers, orders: showOrders, banners: showBanners, settings: showSettings };
 async function openTab(name) {
   document.querySelectorAll('.admin__tabs button').forEach(b => b.classList.toggle('is-active', b.dataset.tab === name));
   view.innerHTML = '<div class="empty">جاري التحميل...</div>';
@@ -374,6 +376,78 @@ view.addEventListener('change', e => {
     URL.revokeObjectURL(img.src);
   };
   img.src = URL.createObjectURL(file);
+});
+
+/* ---------- الطلبات ---------- */
+let allOrders = [];
+const ORDER_STATUS = { new: 'جديد', processing: 'قيد التجهيز', shipped: 'تم الشحن', delivered: 'تم التسليم', cancelled: 'ملغي' };
+const PAY_LABEL = { cod: 'نقداً عند الاستلام', instapay: 'إنستاباي' };
+const money = n => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' جنيه';
+
+function updateOrdersBadge(n) {
+  const b = document.getElementById('ordersBadge');
+  b.textContent = n;
+  b.hidden = !n;
+}
+
+function orderHTML(o) {
+  const c = o.customer;
+  const wa = /^01\d{9}$/.test(c.phone) ? `https://wa.me/20${c.phone.slice(1)}` : '';
+  const where = o.shipping === 'pickup'
+    ? 'استلام من المعرض'
+    : `${esc(o.address.governorate.ar)} - ${esc(o.address.city)} - ${esc(o.address.street)}`;
+  const ship = o.shippingPending ? ' + توصيل (يتحدد بالتليفون)' : (o.shippingFee ? ` + توصيل ${money(o.shippingFee)}` : '');
+  return `
+    <article class="ocard st-${esc(o.status)}" data-id="${esc(o.id)}">
+      <div class="ocard__head">
+        <strong dir="ltr">${esc(o.id)}</strong>
+        <small>${fmtDate(o.createdAt)}</small>
+        <select class="ostatus" aria-label="الحالة">
+          ${Object.entries(ORDER_STATUS).map(([k, v]) => `<option value="${k}" ${o.status === k ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ocard__grid">
+        <div>
+          <b>${esc(c.firstName)} ${esc(c.lastName)}</b>
+          <p dir="ltr">${esc(c.phone)}</p>
+          <p>${esc(c.email)}</p>
+        </div>
+        <div>
+          <p>${where}</p>
+          <p>الدفع: ${PAY_LABEL[o.payment] || ''}</p>
+          ${c.notes ? `<p>ملاحظات: ${esc(c.notes)}</p>` : ''}
+        </div>
+      </div>
+      <ul class="ocard__items">
+        ${o.items.map(i => `<li><span>${esc(i.name.ar)} × ${i.qty}${i.tile ? ` (${i.tile.area} م²)` : ''}</span><b>${money(i.line)}</b></li>`).join('')}
+      </ul>
+      <div class="ocard__total"><span>المنتجات ${money(o.subtotal)}${ship}</span><b>${money(o.total)}</b></div>
+      <div class="msg__btns">
+        <a href="tel:${esc(c.phone)}">اتصال</a>
+        ${wa ? `<a href="${wa}" target="_blank" rel="noopener">واتساب</a>` : ''}
+        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(c.email)}" target="_blank" rel="noopener">إيميل</a>
+      </div>
+    </article>`;
+}
+
+async function showOrders() {
+  allOrders = (await api('/api/admin/orders')).orders;
+  updateOrdersBadge(allOrders.filter(o => o.status === 'new').length);
+  view.innerHTML = allOrders.length
+    ? allOrders.map(orderHTML).join('')
+    : '<div class="empty">مفيش طلبات لسه.</div>';
+}
+
+view.addEventListener('change', async e => {
+  if (!e.target.classList.contains('ostatus')) return;
+  const card = e.target.closest('.ocard');
+  try {
+    await api('/api/admin/orders/' + card.dataset.id, { method: 'PATCH', body: JSON.stringify({ status: e.target.value }) });
+    const o = allOrders.find(x => x.id === card.dataset.id);
+    if (o) o.status = e.target.value;
+    card.className = 'ocard st-' + e.target.value;
+    updateOrdersBadge(allOrders.filter(x => x.status === 'new').length);
+  } catch { alert('حصل خطأ، جرّب تاني.'); showOrders(); }
 });
 
 /* ---------- البداية: التأكد إنه أدمن ---------- */

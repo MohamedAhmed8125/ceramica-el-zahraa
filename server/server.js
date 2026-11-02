@@ -9,6 +9,8 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
+const CHECKOUT = require('./checkout-config');
+const PRODUCTS = require('./catalog-data'); // مؤقت لحد الـ database
 const { OAuth2Client } = require('google-auth-library');
 
 const SECRET = process.env.JWT_SECRET;
@@ -219,8 +221,14 @@ const requireAdmin = (req, res, next) =>
 const adminOnly = [auth, requireAdmin];
 
 app.get('/api/admin/stats', adminOnly, async (req, res) => {
-  const [users, msgs] = await Promise.all([readUsers(), readMessages()]);
-  res.json({ users: users.length, messages: msgs.length, unread: msgs.filter(m => !m.read).length });
+  const [users, msgs, ords] = await Promise.all([readUsers(), readMessages(), orders.read()]);
+  res.json({
+    users: users.length,
+    messages: msgs.length,
+    unread: msgs.filter(m => !m.read).length,
+    orders: ords.length,
+    newOrders: ords.filter(o => o.status === 'new').length
+  });
 });
 
 app.get('/api/admin/messages', adminOnly, async (req, res) => {
@@ -498,6 +506,188 @@ app.post('/api/reset', limiter, async (req, res) => {
     if (u) u.passwordHash = passwordHash;
   });
   res.json({ ok: true });
+});
+
+/* ---------- المنتجات والطلبات ---------- */
+const orders = makeStore(path.join(__dirname, '..', 'data', 'orders.json'));
+
+const round2 = n => Math.round(n * 100) / 100;
+const unitPrice = p => (p.type === 'tile' ? round2(p.price * p.tile.perBox) : p.price);
+
+app.get('/api/products', (req, res) => res.json({ products: PRODUCTS }));
+
+app.get('/api/checkout-config', (req, res) => res.json({
+  governorates: CHECKOUT.governorates,
+  shippingFee: CHECKOUT.shippingFee,
+  pickup: CHECKOUT.pickup,
+  instapayNumber: CHECKOUT.instapayNumber
+}));
+
+async function optionalUser(req) {
+  try {
+    const { sub } = jwt.verify(req.cookies[COOKIE] || '', SECRET);
+    return (await readUsers()).find(u => u.id === sub) || null;
+  } catch { return null; }
+}
+
+function orderMails(o, lng) {
+  const egp = (n, ar) => `${Number(n).toLocaleString('en-US')} ${ar ? 'جنيه' : 'EGP'}`;
+  const itemsTxt = ar => o.items.map(i =>
+    `- ${ar ? i.name.ar : i.name.en} × ${i.qty}${i.tile ? ` (${i.tile.area} ${ar ? 'م²' : 'm²'})` : ''} = ${egp(i.line, ar)}`).join('\n');
+  const totalsTxt = ar => [
+    `${ar ? 'إجمالي المنتجات' : 'Subtotal'}: ${egp(o.subtotal, ar)}`,
+    o.shippingPending
+      ? (ar ? 'التوصيل: يتحدد عند تأكيد الطلب' : 'Delivery: to be confirmed')
+      : `${ar ? 'التوصيل' : 'Delivery'}: ${egp(o.shippingFee, ar)}`,
+    `${ar ? 'الإجمالي' : 'Total'}: ${egp(o.total, ar)}`
+  ].join('\n');
+  const c = o.customer;
+  const where = ar => o.shipping === 'pickup'
+    ? (ar ? 'استلام من المعرض' : 'Pickup from the showroom')
+    : `${ar ? o.address.governorate.ar : o.address.governorate.en} - ${o.address.city} - ${o.address.street}`;
+  const payTxt = ar => o.payment === 'instapay' ? (ar ? 'إنستاباي' : 'InstaPay') : (ar ? 'نقداً عند الاستلام' : 'Cash on delivery');
+
+  const admin = {
+    subject: `طلب جديد ${o.id}`,
+    text: `طلب جديد ${o.id}\n\nالعميل: ${c.firstName} ${c.lastName}\nالتليفون: ${c.phone}\nالإيميل: ${c.email}\nالاستلام: ${where(true)}\nالدفع: ${payTxt(true)}\n${c.notes ? `ملاحظات: ${c.notes}\n` : ''}\nالمنتجات:\n${itemsTxt(true)}\n\n${totalsTxt(true)}`
+  };
+
+  const ar = lng !== 'en';
+  let payNote = ar ? 'هتدفع نقداً عند الاستلام.' : 'You will pay cash on delivery.';
+  if (o.payment === 'instapay') {
+    payNote = o.shippingPending
+      ? (ar ? `بعد ما نتصل بيك ونأكد المبلغ النهائي، حوّل على إنستاباي رقم ${CHECKOUT.instapayNumber} وابعت صورة التحويل مع رقم الطلب على واتساب.`
+            : `After we call you and confirm the final amount, transfer via InstaPay to ${CHECKOUT.instapayNumber} and send the receipt with your order number on WhatsApp.`)
+      : (ar ? `حوّل ${egp(o.total, true)} على إنستاباي رقم ${CHECKOUT.instapayNumber} وابعت صورة التحويل مع رقم الطلب على واتساب.`
+            : `Transfer ${egp(o.total, false)} via InstaPay to ${CHECKOUT.instapayNumber} and send the receipt with your order number on WhatsApp.`);
+  }
+  const customer = {
+    subject: ar ? `تأكيد استلام طلبك ${o.id}` : `We received your order ${o.id}`,
+    text: ar
+      ? `أهلاً ${c.firstName}،\n\nاستلمنا طلبك رقم ${o.id}، وهنتصل بيك على ${c.phone} لتأكيده.\n\nالاستلام: ${where(true)}\n\nالمنتجات:\n${itemsTxt(true)}\n\n${totalsTxt(true)}\n\n${payNote}\n\nشكراً لاختيارك سيراميكا الزهراء.`
+      : `Hello ${c.firstName},\n\nWe received your order ${o.id} and will call you on ${c.phone} to confirm it.\n\nReceiving: ${where(false)}\n\nItems:\n${itemsTxt(false)}\n\n${totalsTxt(false)}\n\n${payNote}\n\nThank you for choosing Ceramica El-Zahraa.`
+  };
+  return { admin, customer };
+}
+
+async function notifyOrder(o, lng) {
+  const { admin, customer } = orderMails(o, lng);
+  if (!mailer) {
+    if (!IS_PROD) console.log(`\n[تجربة] طلب جديد:\n${admin.text}\n`);
+    else console.warn('إعدادات الإيميل ناقصة، مفيش إيميل اتبعت للطلب', o.id);
+    return;
+  }
+  const from = `"سيراميكا الزهراء | Ceramica El-Zahraa" <${MAIL_USER}>`;
+  const results = await Promise.allSettled([
+    mailer.sendMail({ from, to: MAIL_USER, subject: admin.subject, text: admin.text }),
+    mailer.sendMail({ from, to: o.customer.email, subject: customer.subject, text: customer.text })
+  ]);
+  results.forEach(r => { if (r.status === 'rejected') console.error('order mail failed:', r.reason && r.reason.message); });
+}
+
+const orderLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false,
+  message: { error: 'too_many_requests' }
+});
+
+app.post('/api/orders', orderLimiter, async (req, res) => {
+  const b = req.body || {};
+  const c = b.customer || {};
+  const clean = (v, max) => String(v ?? '').trim().replace(/\s+/g, ' ').slice(0, max);
+
+  // المنتجات: السعر بييجي من السيرفر مش من المتصفح
+  const raw = Array.isArray(b.items) ? b.items.slice(0, 50) : [];
+  const merged = new Map();
+  for (const it of raw) {
+    const id = String((it && it.id) || '');
+    const qty = Math.floor(Number(it && it.qty));
+    if (!id || !(qty > 0)) return res.status(400).json({ error: 'invalid_items' });
+    merged.set(id, Math.min((merged.get(id) || 0) + qty, 9999));
+  }
+  if (!merged.size) return res.status(400).json({ error: 'invalid_items' });
+
+  const lines = [];
+  for (const [id, qty] of merged) {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (!p) return res.status(400).json({ error: 'invalid_items' });
+    if (p.stock <= 0 || qty > p.stock) return res.status(409).json({ error: 'out_of_stock' });
+    const unit = unitPrice(p);
+    lines.push({
+      id, name: p.name, brand: p.brand, qty, unit, line: round2(unit * qty),
+      ...(p.type === 'tile' ? { tile: { size: p.tile.size, perBox: p.tile.perBox, area: round2(qty * p.tile.perBox) } } : {})
+    });
+  }
+
+  // بيانات العميل
+  const firstName = clean(c.firstName, 40);
+  const lastName = clean(c.lastName, 40);
+  const email = clean(c.email, 120).toLowerCase();
+  const phone = normalizePhone(c.phone);
+  if (firstName.length < 2 || lastName.length < 2) return res.status(400).json({ error: 'invalid_name' });
+  if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'invalid_email' });
+  if (!phone) return res.status(400).json({ error: 'invalid_phone' });
+
+  // الاستلام والدفع
+  const shipping = b.shipping === 'pickup' ? 'pickup' : 'delivery';
+  if (shipping === 'pickup' && !CHECKOUT.pickup) return res.status(400).json({ error: 'invalid_shipping' });
+  let address = null;
+  if (shipping === 'delivery') {
+    const gov = CHECKOUT.governorates.find(g => g.id === c.governorate);
+    if (!gov) return res.status(400).json({ error: 'area_not_covered' });
+    const city = clean(c.city, 80);
+    const street = clean(c.address, 200);
+    if (city.length < 2 || street.length < 5) return res.status(400).json({ error: 'invalid_address' });
+    address = { governorate: { id: gov.id, ar: gov.ar, en: gov.en }, city, street };
+  }
+  const payment = ['cod', 'instapay'].includes(b.payment) ? b.payment : null;
+  if (!payment) return res.status(400).json({ error: 'invalid_payment' });
+
+  const subtotal = round2(lines.reduce((s, l) => s + l.line, 0));
+  const feeIsSet = typeof CHECKOUT.shippingFee === 'number';
+  const shippingFee = shipping === 'delivery' && feeIsSet ? CHECKOUT.shippingFee : 0;
+  const shippingPending = shipping === 'delivery' && !feeIsSet;
+  const total = round2(subtotal + shippingFee);
+
+  const user = await optionalUser(req);
+  try {
+    const order = await orders.update(list => {
+      const last = list.reduce((m, o) => Math.max(m, Number(String(o.id).replace(/\D/g, '')) || 0), 1000);
+      const o = {
+        id: `ZH-${last + 1}`, createdAt: new Date().toISOString(), status: 'new',
+        items: lines, subtotal, shippingFee, shippingPending, total, shipping, payment,
+        customer: { firstName, lastName, email, phone, notes: clean(c.notes, 300) },
+        address, userId: user ? user.id : null
+      };
+      list.push(o);
+      return o;
+    });
+    notifyOrder(order, b.lang === 'en' ? 'en' : 'ar').catch(err => console.error('notify failed:', err.message));
+    res.status(201).json({ order: {
+      id: order.id, items: order.items, subtotal, shippingFee, shippingPending, total,
+      shipping, payment, phone, email
+    } });
+  } catch {
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
+/* ---------- طلبات لوحة التحكم ---------- */
+app.get('/api/admin/orders', adminOnly, async (req, res) => {
+  res.json({ orders: (await orders.read()).reverse() });
+});
+
+app.patch('/api/admin/orders/:id', adminOnly, async (req, res) => {
+  const status = String(req.body.status || '');
+  if (!['new', 'processing', 'shipped', 'delivered', 'cancelled'].includes(status)) {
+    return res.status(400).json({ error: 'invalid_status' });
+  }
+  const ok = await orders.update(list => {
+    const o = list.find(x => x.id === req.params.id);
+    if (!o) return false;
+    o.status = status;
+    return true;
+  });
+  ok ? res.json({ ok: true }) : res.status(404).json({ error: 'not_found' });
 });
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));

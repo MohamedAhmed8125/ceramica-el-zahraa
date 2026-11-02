@@ -47,6 +47,8 @@ function buildSection(el) {
 const renderProducts = () => document.querySelectorAll('.products').forEach(buildSection);
 
 function renderCartCount() {
+  // أيقونة السلة بتفتح صفحة السلة في كل الصفحات
+  document.querySelectorAll('.cart-btn').forEach(a => a.setAttribute('href', 'cart.html'));
   const c = $('#cartCount');
   if (!c || typeof Cart === 'undefined') return;
   const n = Cart.count();
