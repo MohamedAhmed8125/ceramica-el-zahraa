@@ -157,6 +157,10 @@
     const where = d.shipping === 'pickup'
       ? `${t('co_pickupAt')}: ${esc(FOOTER_CONFIG.address[lang])}`
       : `${esc(gov ? nm(gov) : '')} - ${esc(d.city)} - ${esc(d.address)}`;
+    const hasCod = S.cfg.payments.includes('cod');
+    const hasIp = S.cfg.payments.includes('instapay');
+    const codOpt = hasCod ? opt('pay', 'cod', S.pay === 'cod', t('co_cod'), t('co_codHint')) : '';
+    const ipOpt = hasIp ? opt('pay', 'instapay', S.pay === 'instapay', t('co_instapay'), t('co_instapayHint', { n: esc(S.cfg.instapayNumber) })) : '';
     return `
       <section class="card">
         <div class="card__head"><h2>${t('co_shipTo')}</h2><button type="button" class="link" data-go="edit">${t('co_edit')}</button></div>
@@ -167,8 +171,8 @@
       <section class="card">
         <h2>${t('co_payTitle')}</h2>
         <div class="opts">
-          ${opt('pay', 'cod', S.pay === 'cod', t('co_cod'), t('co_codHint'))}
-          ${opt('pay', 'instapay', S.pay === 'instapay', t('co_instapay'), t('co_instapayHint', { n: esc(S.cfg.instapayNumber) }))}
+          ${codOpt}
+          ${ipOpt}
         </div>
         ${err('pay')}
         ${S.serverError ? `<p class="cerr" role="alert">${errText(S.serverError)}</p>` : ''}
@@ -317,10 +321,12 @@
   document.addEventListener('langchange', render);
 
   /* ---------- البداية ---------- */
+      /* ---------- البداية ---------- */
   (async function init() {
     try { S.cfg = await (await fetch('/api/checkout-config')).json(); }
-    catch { S.cfg = { governorates: [], shippingFee: null, pickup: true, instapayNumber: '' }; }
+    catch { S.cfg = { governorates: [], shippingFee: null, pickup: true, payments: ['instapay'], instapayNumber: '' }; }
     if (!S.cfg.pickup) S.d.shipping = 'delivery';
+    if (S.cfg.payments.length === 1) S.pay = S.cfg.payments[0]; // طريقة وحيدة: بتتحدد لوحدها
 
     const cart = Cart.get();
     const prods = await Promise.all(cart.map(i => Catalog.byId(i.id)));

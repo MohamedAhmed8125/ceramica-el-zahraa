@@ -8,6 +8,8 @@ module.exports = {
   shippingFee: null,
   // خيار الاستلام من المعرض (false لو عايز تقفله)
   pickup: true,
+    // طرق الدفع المتاحة: 'instapay' و 'cod' (الدفع عند الاستلام). دلوقتي إنستاباي بس
+  payments: ['instapay'],
   // رقم التحويل على إنستاباي
   instapayNumber: '01006666083'
 };

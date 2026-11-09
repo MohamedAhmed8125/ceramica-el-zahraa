@@ -520,6 +520,7 @@ app.get('/api/checkout-config', (req, res) => res.json({
   governorates: CHECKOUT.governorates,
   shippingFee: CHECKOUT.shippingFee,
   pickup: CHECKOUT.pickup,
+  payments: CHECKOUT.payments,
   instapayNumber: CHECKOUT.instapayNumber
 }));
 
@@ -639,7 +640,7 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
     if (city.length < 2 || street.length < 5) return res.status(400).json({ error: 'invalid_address' });
     address = { governorate: { id: gov.id, ar: gov.ar, en: gov.en }, city, street };
   }
-  const payment = ['cod', 'instapay'].includes(b.payment) ? b.payment : null;
+  const payment = CHECKOUT.payments.includes(b.payment) ? b.payment : null;
   if (!payment) return res.status(400).json({ error: 'invalid_payment' });
 
   const subtotal = round2(lines.reduce((s, l) => s + l.line, 0));

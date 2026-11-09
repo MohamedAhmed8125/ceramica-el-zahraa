@@ -273,9 +273,9 @@ function renderBannerForm(b) {
       <h2>${isNew ? 'إضافة بانر' : 'تعديل البانر'}</h2>
       <div class="grid2">
         <div class="field">
-          <span>صورة الكمبيوتر (1920×430)${isNew ? ' - مطلوبة' : ''}</span>
+          <span>صورة الكمبيوتر (1600×600)${isNew ? ' - مطلوبة' : ''}</span>
           ${b.desktop ? `<img class="thumb" src="${esc(b.desktop)}" alt="">` : ''}
-          <input type="file" name="desktop" accept="image/jpeg,image/png,image/webp" data-ratio="4.465">
+          <input type="file" name="desktop" accept="image/jpeg,image/png,image/webp" data-ratio="2.667">
           <small class="hint" data-hint>${b.desktop ? 'سيبها فاضية لو مش عايز تغيّر الصورة.' : ''}</small>
         </div>
         <div class="field">

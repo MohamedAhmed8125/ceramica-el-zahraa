@@ -1,4 +1,4 @@
-.hero-slider { position: relative; overflow: hidden; aspect-ratio: 1920 / 430; min-height: 260px; background: #0b0b0b; color: #fff; }
+.hero-slider { position: relative; overflow: hidden; aspect-ratio: 8 / 3; max-width: 1400px; min-height: 220px; background: #0b0b0b; color: #fff; }
 
 .hero-slide { position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; visibility: hidden; transition: opacity .6s ease, visibility .6s; }
 .hero-slide.is-active { opacity: 1; visibility: visible; z-index: 1; }
@@ -26,7 +26,7 @@ html[dir="ltr"] .hero-slide.has-text:not(.no-img)::before { background: linear-g
 .hero-slider.single .hero-arrow { display: none; }
 
 @media (max-width: 700px) {
-  .hero-slider { aspect-ratio: 3 / 2; min-height: 240px; }
+  .hero-slider { aspect-ratio: 3 / 2; min-height: 0; max-width: none; }
   .hero-slide .hero__text { padding: 20px 24px; }
   .hero-arrow { display: none; } /* على الموبايل بالسحب بالإصبع */
 }
