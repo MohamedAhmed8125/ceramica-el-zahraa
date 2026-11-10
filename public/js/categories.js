@@ -53,3 +53,9 @@ const CATEGORIES = [
     { ar: 'الإكسسوارات والديكور', en: 'Accessories & decor', items: [['مرايات', 'Mirrors'], ['إكسسوارات الحمام', 'Bathroom accessories']] }
   ] }
 ];
+
+// تحويل الاسم الإنجليزي لرابط. بنستخدمه في الأقسام الفرعية
+const slugify = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const catHref = id => `category.html?c=${encodeURIComponent(id)}`;
+const groupHref = (id, g) => `category.html?c=${encodeURIComponent(id)}&g=${encodeURIComponent(g)}`;
+const subHref = (id, s) => `category.html?c=${encodeURIComponent(id)}&sub=${encodeURIComponent(s)}`;

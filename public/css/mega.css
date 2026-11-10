@@ -70,3 +70,5 @@ html[dir="ltr"] .chev { transform: rotate(-135deg); }
   .nav__row .nav__list a { padding: 14px 12px; font-size: .95rem; }
   .nav__row .nav__list { scrollbar-width: none; }
 }
+
+.mega__all { display: inline-block; margin-bottom: 14px; font-weight: 700; color: var(--orange-dark); text-decoration: underline; }

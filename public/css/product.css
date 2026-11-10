@@ -93,3 +93,8 @@
   .room__grid { grid-template-columns: 1fr; }
   .calc__tabs button { font-size: .85rem; }
 }
+
+.pd__fav { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; margin-bottom: 14px; color: #444; background: #fff; }
+.pd__fav svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+.pd__fav.is-on { color: #d4461f; border-color: #f0c4c0; }
+.pd__fav.is-on svg { fill: #d4461f; }

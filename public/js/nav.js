@@ -8,7 +8,16 @@
   // العنصر ممكن يكون [عربي, إنجليزي] أو { ar, en }
   const nm = x => (Array.isArray(x) ? x[lang === 'en' ? 1 : 0] : (lang === 'en' ? x.en : x.ar));
   // لما نعمل صفحة القسم نغيّر السطر ده لـ: id => 'category.html?c=' + id
-  const href = id => '#';
+  const href = id => catHref(id);
+  const colHTML = (c, cat) => {
+    const slug = slugify(c.en);
+    const head = c.items.length ? groupHref(cat.id, slug) : subHref(cat.id, slug);
+    return `
+    <div class="mega__col">
+      <a class="mega__head" href="${head}">${esc(nm(c))}</a>
+      ${c.items.length ? `<ul>${c.items.map(i => `<li><a href="${subHref(cat.id, slugify(i[1]))}">${esc(nm(i))}</a></li>`).join('')}</ul>` : ''}
+    </div>`;
+  };
 
   const isDesktop = () => matchMedia('(hover: hover) and (pointer: fine)').matches && innerWidth > 900;
   const mega = () => document.getElementById('mega');
@@ -27,12 +36,6 @@
     if (!open) m.querySelectorAll('.mega__item.is-open').forEach(li => li.classList.remove('is-open'));
   }
 
-  const colHTML = c => `
-    <div class="mega__col">
-      <a class="mega__head" href="#">${esc(nm(c))}</a>
-      ${c.items.length ? `<ul>${c.items.map(i => `<li><a href="#">${esc(nm(i))}</a></li>`).join('')}</ul>` : ''}
-    </div>`;
-
   function render() {
     const items = CATEGORIES.map(c => {
       const has = c.cols.length > 0;
@@ -42,7 +45,7 @@
             <span>${esc(nm(c))}${c.badge ? ` <em class="mega__badge">${esc(nm(c.badge))}</em>` : ''}</span>
             ${has ? '<i class="chev"></i>' : ''}
           </a>
-          ${has ? `<div class="mega__panel"><div class="mega__cols">${c.cols.map(colHTML).join('')}</div></div>` : ''}
+          ${has ? `<div class="mega__panel"><a class="mega__all" href="${href(c.id)}">${t('viewAllCat', { n: esc(nm(c)) })}</a><div class="mega__cols">${c.cols.map(col => colHTML(col, c)).join('')}</div></div>` : ''}
         </li>`;
     }).join('');
 

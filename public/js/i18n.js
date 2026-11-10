@@ -52,7 +52,8 @@ const I18N = {
     goLogin: 'تسجيل الدخول', backToLogin: 'الرجوع لتسجيل الدخول',
     password_mismatch: 'تأكيد كلمة المرور مش مطابق.',
     invalid_token: 'الرابط غير صالح أو انتهت صلاحيته. اطلب رابط جديد.',
-    privacy: 'سياسة الخصوصية', agreePrefix: 'بتسجيلك أو دخولك، أنت موافق على'
+    privacy: 'سياسة الخصوصية', agreePrefix: 'بتسجيلك أو دخولك، أنت موافق على',
+    viewAllCat: 'عرض كل {n}'
   },
   en: {
     deliverTo: 'Deliver to', egypt: 'Egypt', search: 'Search', searchPlaceholder: 'What are you looking for?',
@@ -109,7 +110,8 @@ const I18N = {
     goLogin: 'Sign in', backToLogin: 'Back to sign in',
     password_mismatch: 'Passwords do not match.',
     invalid_token: 'This link is invalid or has expired. Request a new one.',
-    privacy: 'Privacy policy', agreePrefix: 'By signing in or registering, you agree to our'
+    privacy: 'Privacy policy', agreePrefix: 'By signing in or registering, you agree to our',
+    viewAllCat: 'View all {n}'
   }
 };
 

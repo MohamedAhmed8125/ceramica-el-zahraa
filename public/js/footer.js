@@ -96,7 +96,7 @@ function mailHref(email) {
         <nav>
           <h3>${t('shopByCat')}</h3>
                     <ul>
-            ${CATEGORIES.map(c => `<li><a href="#">${lang === 'en' ? c.en : c.ar}</a></li>`).join('')}
+            ${CATEGORIES.map(c => `<li><a href="${catHref(c.id)}">${lang === 'en' ? c.en : c.ar}</a></li>`).join('')}
           </ul>
         </nav>
 

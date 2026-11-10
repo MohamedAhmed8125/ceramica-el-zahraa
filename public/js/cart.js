@@ -33,3 +33,29 @@ const Cart = (() => {
     clear() { write([]); }
   };
 })();
+
+const Favs = (() => {
+  const KEY = 'zahraa_favs';
+  const read = () => {
+    try {
+      const v = JSON.parse(localStorage.getItem(KEY));
+      return Array.isArray(v) ? v.filter(x => typeof x === 'string').slice(0, 500) : [];
+    } catch { return []; }
+  };
+  const write = list => {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch {}
+    document.dispatchEvent(new Event('favs:change'));
+  };
+  return {
+    all: read,
+    has: id => read().includes(id),
+    count: () => read().length,
+    toggle(id) { // بيرجّع true لو اتضاف، false لو اتشال
+      const l = read();
+      const i = l.indexOf(id);
+      if (i >= 0) l.splice(i, 1); else l.unshift(id);
+      write(l);
+      return i < 0;
+    }
+  };
+})();

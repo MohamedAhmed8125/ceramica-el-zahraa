@@ -227,6 +227,7 @@
         <div class="pd__info">
           <span class="pd__brand">${esc(P.brand)}</span>
           <h1 class="pd__name">${esc(nm(P.name))}</h1>
+          <button type="button" class="pd__fav ${Favs.has(P.id) ? 'is-on' : ''}" data-fav="${esc(P.id)}" aria-pressed="${Favs.has(P.id)}">${ProductCard.HEART}<span>${t('sh_fav')}</span></button>
           <div class="pd__price">
             <strong>${t('currency')} ${fmt(P.price)}</strong>
             ${isTile() ? `<span class="pd__unit">${t('pd_perM2')}</span>` : ''}
