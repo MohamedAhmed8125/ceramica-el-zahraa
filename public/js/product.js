@@ -52,6 +52,9 @@
   const isTile = () => P.type === 'tile';
   const round2 = n => Math.round(n * 100) / 100;
   const boxPrice = () => round2(P.price * P.tile.perBox);
+  const boxInfo = () => (P.tile.pcs
+  ? t('pd_boxInfo', { m: fmt(P.tile.perBox), n: P.tile.pcs })
+  : `${t('pd_cover')} ${fmt(P.tile.perBox)} ${t('pd_m2')}`);
   const unitPrice = () => (isTile() ? boxPrice() : P.price);
   const maxQty = () => Math.max(0, Math.min(P.stock, 9999));
   const clamp = q => Math.min(Math.max(1, Math.floor(q) || 1), Math.max(1, maxQty()));
@@ -97,7 +100,7 @@
       rows.push(
         [t('pd_size'), `${P.tile.size} ${t('pd_cm')}`],
         [t('pd_finish'), nm(P.tile.finish)],
-        [t('pd_pcs'), P.tile.pcs],
+        ...(P.tile.pcs ? [[t('pd_pcs'), P.tile.pcs]] : []),
         [t('pd_cover'), `${fmt(P.tile.perBox)} ${t('pd_m2')}`]
       );
     }
@@ -204,7 +207,7 @@
     const list = await Catalog.related(P, 4);
     const box = document.getElementById('related');
     if (!box || !list.length) return;
-    box.innerHTML = `<h2>${t('pd_related')}</h2><div class="related__grid">${list.map(cardHTML).join('')}</div>`;
+    box.innerHTML = `<h2>${t('pd_related')}</h2><div class="pgrid">${list.map(ProductCard.html).join('')}</div>`;
   }
 
   function render() {
@@ -233,7 +236,7 @@
             ${isTile() ? `<span class="pd__unit">${t('pd_perM2')}</span>` : ''}
             ${disc ? `<del>${fmt(P.old)}</del><em class="pd__disc">-${disc}%</em>` : ''}
           </div>
-          ${isTile() ? `<p class="pd__box">${t('pd_boxPrice')}: <b>${t('currency')} ${fmt(boxPrice())}</b> <span>(${t('pd_boxInfo', { m: fmt(P.tile.perBox), n: P.tile.pcs })})</span></p>` : ''}
+          ${isTile() ? `<p class="pd__box">${t('pd_boxPrice')}: <b>${t('currency')} ${fmt(boxPrice())}</b> <span>(${boxInfo()})</span></p>` : ''}
           <p class="pd__stock ${P.stock <= 1 ? 'low' : ''}">${stock}</p>
           ${specsHTML()}
           ${isTile() ? calcHTML() : ''}

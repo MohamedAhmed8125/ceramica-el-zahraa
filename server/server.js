@@ -514,7 +514,7 @@ const orders = makeStore(path.join(__dirname, '..', 'data', 'orders.json'));
 const round2 = n => Math.round(n * 100) / 100;
 const unitPrice = p => (p.type === 'tile' ? round2(p.price * p.tile.perBox) : p.price);
 
-app.get('/api/products', (req, res) => res.json({ products: PRODUCTS }));
+app.get('/api/products', async (req, res) => res.json({ products: await getProducts() }));
 
 app.get('/api/checkout-config', (req, res) => res.json({
   governorates: CHECKOUT.governorates,
@@ -607,9 +607,10 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
   }
   if (!merged.size) return res.status(400).json({ error: 'invalid_items' });
 
+  const live = await getProducts();
   const lines = [];
   for (const [id, qty] of merged) {
-    const p = PRODUCTS.find(x => x.id === id);
+    const p = live.find(x => x.id === id);
     if (!p) return res.status(400).json({ error: 'invalid_items' });
     if (p.stock <= 0 || qty > p.stock) return res.status(409).json({ error: 'out_of_stock' });
     const unit = unitPrice(p);
@@ -662,6 +663,7 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
       list.push(o);
       return o;
     });
+    try { await adjustStock(order.items, -1); } catch (err) { console.error('stock adjust failed:', err.message); }
     notifyOrder(order, b.lang === 'en' ? 'en' : 'ar').catch(err => console.error('notify failed:', err.message));
     res.status(201).json({ order: {
       id: order.id, items: order.items, subtotal, shippingFee, shippingPending, total,
@@ -682,13 +684,185 @@ app.patch('/api/admin/orders/:id', adminOnly, async (req, res) => {
   if (!['new', 'processing', 'shipped', 'delivered', 'cancelled'].includes(status)) {
     return res.status(400).json({ error: 'invalid_status' });
   }
+  let prev = null, items = [];
   const ok = await orders.update(list => {
     const o = list.find(x => x.id === req.params.id);
     if (!o) return false;
+    prev = o.status;
+    items = o.items;
     o.status = status;
     return true;
   });
+  if (!ok) return res.status(404).json({ error: 'not_found' });
+  // الإلغاء بيرجّع المخزون، ولو الطلب رجع بعد الإلغاء بيتخصم تاني
+  try {
+    if (prev !== status && status === 'cancelled') await adjustStock(items, +1);
+    else if (prev === 'cancelled' && status !== 'cancelled') await adjustStock(items, -1);
+  } catch (err) { console.error('stock adjust failed:', err.message); }
+  res.json({ ok: true });
+});
+
+/* ---------- المنتجات (بتتضاف من لوحة التحكم) ---------- */
+const products = makeStore(path.join(__dirname, '..', 'data', 'products.json'));
+const PRODUCT_DIR = path.join(__dirname, '..', 'public', 'uploads', 'products');
+const FINISHES = {
+  glossy: { ar: 'لامع', en: 'Glossy' }, matte: { ar: 'مطفي', en: 'Matte' },
+  satin: { ar: 'ساتان', en: 'Satin' }, rustic: { ar: 'خشن', en: 'Rustic' }
+};
+const PRODUCT_TONES = ['#cdbfa8', '#a9a39a', '#e4dccf', '#b7aa94', '#d9cbb4', '#c2b8a6'];
+
+// لحد ما تضيف أول منتج حقيقي، الموقع بيعرض المنتجات التجريبية
+async function getProducts() {
+  const real = await products.read();
+  if (!real.length) return PRODUCTS;
+  return real.filter(p => p.active).reverse(); // الأحدث الأول
+}
+
+// خصم المخزون لما طلب يتعمل ورده لو اتلغى (للمنتجات الحقيقية بس)
+async function adjustStock(items, sign) {
+  if (!(await products.read()).length) return;
+  await products.update(list => {
+    items.forEach(i => {
+      const p = list.find(x => x.id === i.id);
+      if (p) p.stock = Math.max(0, p.stock + sign * i.qty);
+    });
+  });
+}
+
+const productUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024, files: 5 } }).array('images', 5);
+const handleProductUpload = (req, res, next) => productUpload(req, res, err =>
+  err ? res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'file_too_large' : 'upload_failed' }) : next());
+
+async function saveProductImage(file) {
+  const ext = detectExt(file.buffer);
+  await fs.mkdir(PRODUCT_DIR, { recursive: true });
+  const name = `${crypto.randomUUID()}.${ext}`;
+  await fs.writeFile(path.join(PRODUCT_DIR, name), file.buffer);
+  return `/uploads/products/${name}`;
+}
+async function removeProductImage(url) {
+  if (!url || !url.startsWith('/uploads/products/')) return;
+  await fs.unlink(path.join(PRODUCT_DIR, path.basename(url))).catch(() => {});
+}
+const cleanupImages = urls => Promise.all(urls.map(removeProductImage));
+
+const latin = s => String(s ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+const numOf = v => { const s = latin(v).replace(',', '.').trim(); return s === '' ? NaN : Number(s); };
+
+function parseProduct(b) {
+  const clean = (v, max) => String(v ?? '').trim().replace(/\s+/g, ' ').slice(0, max);
+  const slugRe = /^[a-z0-9-]{1,80}$/;
+  const nameAr = clean(b.name_ar, 120);
+  const nameEn = clean(b.name_en, 120) || nameAr;
+  const brand = clean(b.brand, 60);
+  const cat = clean(b.cat, 40);
+  const sub = clean(b.sub, 80);
+  if (nameAr.length < 2) return { error: 'invalid_name' };
+  if (!brand) return { error: 'invalid_brand' };
+  if (!slugRe.test(cat) || (sub && !slugRe.test(sub))) return { error: 'invalid_category' };
+
+  const price = numOf(b.price), old = numOf(b.old), stock = numOf(b.stock);
+  if (!(price > 0 && price <= 10000000)) return { error: 'invalid_price' };
+  if (!Number.isInteger(stock) || stock < 0 || stock > 999999) return { error: 'invalid_stock' };
+
+  const data = {
+    cat, sub, brand, type: b.type === 'tile' ? 'tile' : 'item',
+    name: { ar: nameAr, en: nameEn },
+    price: round2(price), old: old > price ? round2(old) : 0,
+    stock, active: b.active !== 'false'
+  };
+
+  if (data.type === 'tile') {
+    const m = latin(b.size).replace(/\s/g, '').replace(/[xX*]/g, '×').match(/^(\d{1,3}(?:\.\d)?)×(\d{1,3}(?:\.\d)?)$/);
+    if (!m) return { error: 'invalid_size' };
+    const finish = FINISHES[b.finish];
+    if (!finish) return { error: 'invalid_finish' };
+    const perBox = numOf(b.perBox);
+    if (!(perBox > 0 && perBox <= 20)) return { error: 'invalid_perbox' };
+    const pcs = numOf(b.pcs);
+    data.tile = {
+      size: `${Number(m[1])}×${Number(m[2])}`, finish, perBox: round2(perBox),
+      pcs: Number.isInteger(pcs) && pcs > 0 && pcs <= 200 ? pcs : 0
+    };
+    data.use = b.use === 'wall' ? 'wall' : 'floor';
+  }
+  return { data };
+}
+
+app.get('/api/admin/products', adminOnly, async (req, res) => {
+  const real = await products.read();
+  res.json({ products: real.slice().reverse(), demo: real.length === 0 });
+});
+
+app.post('/api/admin/products', adminOnly, handleProductUpload, async (req, res) => {
+  const { data, error } = parseProduct(req.body);
+  if (error) return res.status(400).json({ error });
+  const files = req.files || [];
+  if (files.some(f => !detectExt(f.buffer))) return res.status(400).json({ error: 'bad_image' });
+  try {
+    const images = [];
+    for (const f of files) images.push(await saveProductImage(f));
+    const product = await products.update(list => {
+      const p = {
+        id: `p-${crypto.randomBytes(4).toString('hex')}`, ...data, images,
+        tone: PRODUCT_TONES[Math.floor(Math.random() * PRODUCT_TONES.length)],
+        createdAt: new Date().toISOString()
+      };
+      list.push(p);
+      return p;
+    });
+    res.status(201).json({ product });
+  } catch { res.status(500).json({ error: 'server_error' }); }
+});
+
+app.put('/api/admin/products/:id', adminOnly, handleProductUpload, async (req, res) => {
+  const { data, error } = parseProduct(req.body);
+  if (error) return res.status(400).json({ error });
+  const files = req.files || [];
+  if (files.some(f => !detectExt(f.buffer))) return res.status(400).json({ error: 'bad_image' });
+  const toRemove = [].concat(req.body.removeImages || []).map(String);
+  try {
+    const added = [];
+    for (const f of files) added.push(await saveProductImage(f));
+    let removed = [];
+    const result = await products.update(list => {
+      const p = list.find(x => x.id === req.params.id);
+      if (!p) return { error: 'not_found' };
+      const keep = (p.images || []).filter(u => !toRemove.includes(u));
+      if (keep.length + added.length > 5) return { error: 'too_many_images' };
+      removed = (p.images || []).filter(u => toRemove.includes(u));
+      delete p.tile;
+      delete p.use;
+      Object.assign(p, data, { images: [...keep, ...added] });
+      return { product: p };
+    });
+    if (result.error) {
+      await cleanupImages(added);
+      return res.status(result.error === 'not_found' ? 404 : 400).json({ error: result.error });
+    }
+    await cleanupImages(removed);
+    res.json({ product: result.product });
+  } catch { res.status(500).json({ error: 'server_error' }); }
+});
+
+app.patch('/api/admin/products/:id', adminOnly, async (req, res) => {
+  const ok = await products.update(list => {
+    const p = list.find(x => x.id === req.params.id);
+    if (!p) return false;
+    p.active = req.body.active === true;
+    return true;
+  });
   ok ? res.json({ ok: true }) : res.status(404).json({ error: 'not_found' });
+});
+
+app.delete('/api/admin/products/:id', adminOnly, async (req, res) => {
+  const removed = await products.update(list => {
+    const i = list.findIndex(x => x.id === req.params.id);
+    return i < 0 ? null : list.splice(i, 1)[0];
+  });
+  if (!removed) return res.status(404).json({ error: 'not_found' });
+  await cleanupImages(removed.images || []);
+  res.json({ ok: true });
 });
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));

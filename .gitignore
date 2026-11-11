@@ -8,3 +8,4 @@ data/resets.json
 data/orders.json
 Disallow: /cart.html
 Disallow: /checkout.html
+data/products.json

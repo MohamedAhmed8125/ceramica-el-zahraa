@@ -203,7 +203,7 @@ view.addEventListener('submit', async e => {
 });
 
 /* ---------- التبويبات ---------- */
-const tabs = { overview: showOverview, messages: showMessages, users: showUsers, orders: showOrders, banners: showBanners, settings: showSettings };
+const tabs = { overview: showOverview, messages: showMessages, users: showUsers, orders: showOrders, products: showProducts, banners: showBanners, settings: showSettings };
 async function openTab(name) {
   document.querySelectorAll('.admin__tabs button').forEach(b => b.classList.toggle('is-active', b.dataset.tab === name));
   view.innerHTML = '<div class="empty">جاري التحميل...</div>';
@@ -448,6 +448,342 @@ view.addEventListener('change', async e => {
     card.className = 'ocard st-' + e.target.value;
     updateOrdersBadge(allOrders.filter(x => x.status === 'new').length);
   } catch { alert('حصل خطأ، جرّب تاني.'); showOrders(); }
+});
+
+/* ---------- المنتجات ---------- */
+let allProducts = [];
+let prodDemo = false;
+let prodQuery = '';
+let prodCatFilter = '';
+let prodEditing = null; // 'new' أو id المنتج
+let prodKeep = null;    // بيانات بتتكرر في "حفظ وإضافة منتج آخر"
+let prodFlash = '';
+
+const FINISHES = [['glossy', 'لامع'], ['matte', 'مطفي'], ['satin', 'ساتان'], ['rustic', 'خشن']];
+const SIZE_RE = /^(floors|walls)-\d+-\d+-cm$/;
+const toLatin = s => String(s ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+const catName = id => (CATEGORIES.find(c => c.id === id) || { ar: id }).ar;
+
+function subName(catId, slug) {
+  const c = CATEGORIES.find(x => x.id === catId);
+  if (!c) return slug;
+  for (const col of c.cols) {
+    if (!col.items.length && slugify(col.en) === slug) return col.ar;
+    for (const it of col.items) if (slugify(it[1]) === slug) return it[0];
+  }
+  return slug;
+}
+
+// قايمة الأقسام الفرعية للقسم المختار (أقسام المقاسات بتتحدد تلقائياً من مقاس المنتج)
+function subOptions(catId, selected) {
+  const c = CATEGORIES.find(x => x.id === catId);
+  if (!c) return '<option value="">اختر القسم الأول</option>';
+  const opt = (v, l) => `<option value="${esc(v)}" ${v === selected ? 'selected' : ''}>${esc(l)}</option>`;
+  const groups = c.cols.map(col => {
+    if (!col.items.length) return opt(slugify(col.en), col.ar);
+    const items = col.items.map(i => [slugify(i[1]), i[0]]).filter(([v]) => !SIZE_RE.test(v));
+    return items.length ? `<optgroup label="${esc(col.ar)}">${items.map(([v, l]) => opt(v, l)).join('')}</optgroup>` : '';
+  }).join('');
+  return `<option value="">— بدون قسم فرعي —</option>${groups}`;
+}
+
+async function loadProducts() {
+  const d = await api('/api/admin/products');
+  allProducts = d.products;
+  prodDemo = d.demo;
+}
+
+async function showProducts() {
+  await loadProducts();
+  prodEditing = null;
+  renderProductList();
+}
+
+function productRowHTML(p) {
+  const tile = p.type === 'tile';
+  const img = p.images && p.images[0] ? `<img src="${esc(p.images[0])}" alt="">` : '<span>بدون صورة</span>';
+  const price = tile
+    ? `${money(p.price)} / م² (الكرتونة ${money(Math.round(p.price * p.tile.perBox * 100) / 100)})`
+    : money(p.price);
+  const status = !p.active ? ['مخفي', 'chip--off'] : p.stock <= 0 ? ['نفد', 'chip--off'] : ['ظاهر', 'chip--read'];
+  return `
+    <article class="brow prow ${p.active ? '' : 'is-off'}" data-id="${esc(p.id)}">
+      <div class="brow__img prow__img">${img}</div>
+      <div class="brow__info">
+        <strong>${esc(p.name.ar)}</strong>
+        <small>${esc(p.brand)} · ${esc(catName(p.cat))}${p.sub ? ' › ' + esc(subName(p.cat, p.sub)) : ''}</small>
+        <div class="brow__meta">
+          <span>${price}</span>
+          <span>المخزون: ${p.stock} ${tile ? 'كرتونة' : 'قطعة'}</span>
+          <span class="chip ${status[1]}">${status[0]}</span>
+        </div>
+      </div>
+      <div class="brow__btns">
+        <button type="button" data-act="prod-edit">تعديل</button>
+        <button type="button" data-act="prod-toggle">${p.active ? 'إخفاء' : 'إظهار'}</button>
+        <button type="button" class="danger" data-act="prod-delete">حذف</button>
+      </div>
+    </article>`;
+}
+
+function renderProdItems() {
+  const box = document.getElementById('prodList');
+  if (!box) return;
+  const q = prodQuery.trim().toLowerCase();
+  const items = allProducts.filter(p =>
+    (!prodCatFilter || p.cat === prodCatFilter) &&
+    (!q || [p.name.ar, p.name.en, p.brand].some(v => String(v || '').toLowerCase().includes(q))));
+  box.innerHTML = items.length
+    ? items.map(productRowHTML).join('')
+    : `<div class="empty">${allProducts.length ? 'مفيش نتايج مطابقة.' : 'لسه مفيش منتجات. اضغط "+ إضافة منتج" وابدأ.'}</div>`;
+}
+
+function renderProductList() {
+  const flash = prodFlash;
+  prodFlash = '';
+  view.innerHTML = `
+    ${flash ? `<div class="admin-note ok">${esc(flash)}</div>` : ''}
+    ${prodDemo ? '<div class="admin-note">المنتجات اللي ظاهرة في الموقع دلوقتي <b>تجريبية</b>. أول ما تضيف منتج حقيقي هتختفي كلها، ويظهر الموقع بمنتجاتك إنت بس.</div>' : ''}
+    <div class="toolbar">
+      <strong>${allProducts.length} منتج</strong>
+      <div class="toolbar__grow">
+        <input type="search" id="prodSearch" class="search-box" placeholder="ابحث بالاسم أو الماركة..." value="${esc(prodQuery)}">
+        <select id="prodCatSel">
+          <option value="">كل الأقسام</option>
+          ${CATEGORIES.map(c => `<option value="${esc(c.id)}" ${prodCatFilter === c.id ? 'selected' : ''}>${esc(c.ar)}</option>`).join('')}
+        </select>
+      </div>
+      <button type="button" class="btn btn--primary" data-act="prod-new">+ إضافة منتج</button>
+    </div>
+    <div id="prodList"></div>`;
+  renderProdItems();
+}
+
+function productFormHTML(p) {
+  const isNew = !p;
+  const d = p || prodKeep || { cat: '', sub: '', brand: '', type: 'item', use: 'floor' };
+  const tl = d.tile || {};
+  const imgs = (p && p.images) || [];
+  const brands = [...new Set(allProducts.map(x => x.brand))];
+  const v = x => esc(x ?? '');
+  const flash = prodFlash;
+  prodFlash = '';
+  return `
+    <form id="productForm" class="panel panel--wide" novalidate>
+      <h2>${isNew ? 'إضافة منتج' : 'تعديل منتج'}</h2>
+      ${flash ? `<p class="form-msg ok">${esc(flash)}</p>` : ''}
+
+      <div class="grid2">
+        <label class="field"><span>القسم *</span>
+          <select name="cat" id="pfCat">
+            <option value="">اختر القسم...</option>
+            ${CATEGORIES.map(c => `<option value="${esc(c.id)}" ${d.cat === c.id ? 'selected' : ''}>${esc(c.ar)}</option>`).join('')}
+          </select>
+        </label>
+        <label class="field"><span>القسم الفرعي</span>
+          <select name="sub" id="pfSub">${subOptions(d.cat, d.sub)}</select>
+        </label>
+      </div>
+
+      <div class="grid2">
+        <label class="field"><span>اسم المنتج (عربي) *</span><input name="name_ar" maxlength="120" value="${v(p && p.name.ar)}"></label>
+        <label class="field"><span>اسم المنتج (English)</span><input name="name_en" maxlength="120" dir="ltr" value="${v(p && p.name.en)}"><small class="hint">اختياري. لو سبته فاضي بيظهر الاسم العربي.</small></label>
+      </div>
+
+      <div class="grid2">
+        <label class="field"><span>الماركة *</span>
+          <input name="brand" list="brandList" maxlength="60" value="${v(d.brand)}">
+          <datalist id="brandList">${brands.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+        </label>
+        <label class="field"><span>طريقة البيع</span>
+          <select name="type">
+            <option value="item" ${d.type !== 'tile' ? 'selected' : ''}>بالقطعة</option>
+            <option value="tile" ${d.type === 'tile' ? 'selected' : ''}>بالكرتونة (سيراميك / بورسلين / باركيه)</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="tilebox" id="tileBox" ${d.type === 'tile' ? '' : 'hidden'}>
+        <div class="tilebox__title">بيانات الكرتونة</div>
+        <div class="grid2">
+          <label class="field"><span>المقاس بالسنتيمتر *</span><input name="size" dir="ltr" placeholder="60×120" value="${v(tl.size)}"></label>
+          <label class="field"><span>الاستخدام</span>
+            <select name="use">
+              <option value="floor" ${d.use !== 'wall' ? 'selected' : ''}>أرضيات</option>
+              <option value="wall" ${d.use === 'wall' ? 'selected' : ''}>حوائط</option>
+            </select>
+          </label>
+          <label class="field"><span>التشطيب</span>
+            <select name="finish">
+              ${FINISHES.map(([k, l]) => `<option value="${k}" ${tl.finish && tl.finish.ar === l ? 'selected' : ''}>${l}</option>`).join('')}
+            </select>
+          </label>
+          <label class="field"><span>الكرتونة بتغطي كام متر مربع؟ *</span>
+            <input name="perBox" inputmode="decimal" dir="ltr" placeholder="1.44" value="${v(tl.perBox)}">
+          </label>
+          <label class="field"><span>عدد القطع في الكرتونة</span>
+            <input name="pcs" inputmode="numeric" dir="ltr" placeholder="2" value="${v(tl.pcs || '')}"><small class="hint">اختياري</small>
+          </label>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <label class="field"><span id="lblPrice">السعر (جنيه) *</span><input name="price" inputmode="decimal" dir="ltr" value="${v(p && p.price)}"></label>
+        <label class="field"><span id="lblOld">السعر القديم (اختياري)</span><input name="old" inputmode="decimal" dir="ltr" value="${v(p && p.old ? p.old : '')}"><small class="hint">لو أكبر من السعر الحالي بيظهر خصم.</small></label>
+        <label class="field"><span id="lblStock">الكمية المتاحة *</span><input name="stock" inputmode="numeric" dir="ltr" value="${v(p ? p.stock : '')}"></label>
+      </div>
+      <p class="boxprice" id="boxPrice"></p>
+
+      <div class="field">
+        <span>صور المنتج (حتى 5، الأولى هي الرئيسية)</span>
+        ${imgs.length ? `<div class="thumbs">${imgs.map(u => `
+          <div class="thumb-item"><img src="${esc(u)}" alt="">
+            <label><input type="checkbox" name="removeImages" value="${esc(u)}"> حذف</label></div>`).join('')}</div>` : ''}
+        <input type="file" id="pfFiles" name="images" accept="image/jpeg,image/png,image/webp" multiple>
+        <div class="thumbs" id="pfPreview"></div>
+        <small class="hint">يفضل صورة مربعة (مثلاً 1000×1000)، JPG أو PNG أو WebP، وأقل من 2 ميجا للصورة.</small>
+      </div>
+
+      <label class="check"><input type="checkbox" name="active" ${!p || p.active ? 'checked' : ''}> ظاهر في الموقع</label>
+      <p class="form-msg" id="pMsg" role="alert" hidden></p>
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">حفظ</button>
+        ${isNew ? '<button type="submit" class="btn btn--outline" data-again="1">حفظ وإضافة منتج آخر</button>' : ''}
+        <button type="button" class="btn btn--outline" data-act="prod-cancel">إلغاء</button>
+      </div>
+    </form>`;
+}
+
+// تغيّر العناوين والأرقام حسب طريقة البيع
+function syncProductForm() {
+  const f = document.getElementById('productForm');
+  if (!f) return;
+  const tile = f.elements.type.value === 'tile';
+  document.getElementById('tileBox').hidden = !tile;
+  document.getElementById('lblPrice').textContent = tile ? 'سعر المتر المربع (جنيه) *' : 'السعر (جنيه) *';
+  document.getElementById('lblOld').textContent = tile ? 'السعر القديم للمتر (اختياري)' : 'السعر القديم (اختياري)';
+  document.getElementById('lblStock').textContent = tile ? 'عدد الكراتين المتاحة *' : 'الكمية المتاحة *';
+  const price = parseFloat(toLatin(f.elements.price.value).replace(',', '.'));
+  const per = parseFloat(toLatin(f.elements.perBox.value).replace(',', '.'));
+  document.getElementById('boxPrice').textContent =
+    tile && price > 0 && per > 0 ? `سعر الكرتونة = ${money(Math.round(price * per * 100) / 100)}` : '';
+}
+
+function openProductForm(p) {
+  prodEditing = p ? p.id : 'new';
+  view.innerHTML = productFormHTML(p);
+  syncProductForm();
+  window.scrollTo(0, 0);
+}
+
+function renderPreview(input) {
+  const box = document.getElementById('pfPreview');
+  box.innerHTML = '';
+  [...input.files].forEach(file => {
+    const img = document.createElement('img');
+    img.className = 'thumb-img';
+    img.alt = '';
+    img.src = URL.createObjectURL(file);
+    img.onload = () => URL.revokeObjectURL(img.src);
+    box.appendChild(img);
+  });
+}
+
+view.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act^="prod-"]');
+  if (!b) return;
+  const row = b.closest('.prow');
+  const p = row ? allProducts.find(x => x.id === row.dataset.id) : null;
+  try {
+    switch (b.dataset.act) {
+      case 'prod-new': prodKeep = null; openProductForm(null); break;
+      case 'prod-edit': if (p) openProductForm(p); break;
+      case 'prod-cancel': prodKeep = null; await showProducts(); break;
+      case 'prod-toggle':
+        await api('/api/admin/products/' + p.id, { method: 'PATCH', body: JSON.stringify({ active: !p.active }) });
+        await showProducts();
+        break;
+      case 'prod-delete':
+        if (!confirm(`متأكد إنك عايز تحذف "${p.name.ar}"؟`)) return;
+        await api('/api/admin/products/' + p.id, { method: 'DELETE' });
+        await showProducts();
+        break;
+    }
+  } catch { alert('حصل خطأ، جرّب تاني.'); }
+});
+
+view.addEventListener('input', e => {
+  if (e.target.id === 'prodSearch') { prodQuery = e.target.value; renderProdItems(); }
+  else if (e.target.form && e.target.form.id === 'productForm') syncProductForm();
+});
+
+view.addEventListener('change', e => {
+  const el = e.target;
+  if (el.id === 'prodCatSel') { prodCatFilter = el.value; renderProdItems(); }
+  else if (el.id === 'pfCat') {
+    const f = el.form;
+    f.elements.sub.innerHTML = subOptions(el.value, '');
+    f.elements.type.value = el.value === 'ceramic' ? 'tile' : 'item';
+    syncProductForm();
+  } else if (el.name === 'type' && el.form && el.form.id === 'productForm') syncProductForm();
+  else if (el.id === 'pfFiles') renderPreview(el);
+});
+
+view.addEventListener('submit', async e => {
+  if (e.target.id !== 'productForm') return;
+  e.preventDefault();
+  const f = e.target, el = f.elements;
+  const msg = document.getElementById('pMsg');
+  const show = text => { msg.textContent = text; msg.className = 'form-msg'; msg.hidden = false; msg.scrollIntoView({ block: 'center' }); };
+  const again = !!(e.submitter && e.submitter.dataset.again);
+  const tile = el.type.value === 'tile';
+
+  if (!el.cat.value) return show('اختر القسم.');
+  if (el.name_ar.value.trim().length < 2) return show('اكتب اسم المنتج بالعربي.');
+  if (!el.brand.value.trim()) return show('اكتب الماركة.');
+  if (!(parseFloat(toLatin(el.price.value).replace(',', '.')) > 0)) return show('اكتب السعر.');
+  if (el.stock.value.trim() === '') return show('اكتب المخزون (ممكن يكون 0).');
+  if (tile) {
+    if (!/^\d{1,3}(\.\d)?\s*[x×X*]\s*\d{1,3}(\.\d)?$/.test(toLatin(el.size.value).trim())) return show('اكتب المقاس زي 60×120.');
+    if (!(parseFloat(toLatin(el.perBox.value).replace(',', '.')) > 0)) return show('اكتب الكرتونة بتغطي كام متر مربع (مثال 1.44).');
+  }
+
+  const files = [...el.images.files];
+  if (files.some(x => x.size > 2 * 1024 * 1024)) return show('حجم الصورة لازم يكون أقل من 2 ميجابايت.');
+  const existing = f.querySelectorAll('input[name="removeImages"]').length;
+  const removing = f.querySelectorAll('input[name="removeImages"]:checked').length;
+  if (existing - removing + files.length > 5) return show('الحد الأقصى 5 صور للمنتج.');
+
+  const fd = new FormData(f);
+  fd.set('active', el.active.checked ? 'true' : 'false');
+  const isNew = prodEditing === 'new';
+  const buttons = f.querySelectorAll('button[type=submit]');
+  buttons.forEach(x => { x.disabled = true; });
+  try {
+    const r = await fetch(isNew ? '/api/admin/products' : '/api/admin/products/' + prodEditing, { method: isNew ? 'POST' : 'PUT', body: fd });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'error');
+    prodFlash = 'تم حفظ المنتج ✓';
+    if (again) {
+      prodKeep = { cat: el.cat.value, sub: el.sub.value, brand: el.brand.value.trim(), type: el.type.value, use: el.use.value };
+      await loadProducts();
+      openProductForm(null);
+    } else {
+      prodKeep = null;
+      await showProducts();
+    }
+  } catch (err) {
+    show({
+      invalid_name: 'اكتب اسم المنتج بالعربي.', invalid_brand: 'اكتب الماركة.', invalid_category: 'اختر القسم.',
+      invalid_price: 'اكتب سعراً صحيحاً.', invalid_stock: 'المخزون لازم يكون رقم صحيح.',
+      invalid_size: 'المقاس غير صحيح، اكتبه زي 60×120.', invalid_finish: 'اختر التشطيب.',
+      invalid_perbox: 'اكتب الكرتونة بتغطي كام متر مربع (مثال 1.44).',
+      bad_image: 'الصورة لازم تكون JPG أو PNG أو WebP.', file_too_large: 'حجم الصورة لازم يكون أقل من 2 ميجابايت.',
+      too_many_images: 'الحد الأقصى 5 صور للمنتج.', upload_failed: 'تعذر رفع الصور، جرّب تاني.',
+      not_found: 'المنتج ده اتحذف.'
+    }[err.message] || 'حصل خطأ، جرّب تاني.');
+    buttons.forEach(x => { x.disabled = false; });
+  }
 });
 
 /* ---------- البداية: التأكد إنه أدمن ---------- */

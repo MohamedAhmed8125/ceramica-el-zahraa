@@ -128,3 +128,22 @@ tr:last-child td { border-bottom: 0; }
 .ocard__total { display: flex; justify-content: space-between; gap: 10px; font-weight: 600; margin-bottom: 12px; }
 .ocard__total b { color: var(--orange-dark); font-size: 1.15rem; }
 @media (max-width: 640px) { .ocard__grid { grid-template-columns: 1fr; } }
+
+/* ===== المنتجات ===== */
+.prow__img { width: 72px; height: 72px; flex-shrink: 0; }
+.prow .brow__info small { display: block; }
+.toolbar__grow { display: flex; gap: 10px; flex: 1 1 320px; }
+.toolbar__grow .search-box { flex: 1; }
+.toolbar__grow select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: #fff; font: inherit; }
+.admin-note { background: #fffaf0; border: 1px solid #ecd9a0; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; color: #6b5a1a; line-height: 1.8; }
+.admin-note.ok { background: #e7f6ee; border-color: #bfe3cf; color: #12724a; }
+
+.panel .field select { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 6px; background: #fff; font: inherit; }
+.panel .field input[type=file] { padding: 8px; }
+.tilebox { border: 1px dashed var(--orange); border-radius: 8px; padding: 16px; margin-bottom: 14px; background: #fffdf6; }
+.tilebox__title { font-weight: 800; color: var(--orange-dark); margin-bottom: 10px; }
+.boxprice { color: var(--orange-dark); font-weight: 700; margin: 4px 0 12px; min-height: 1.4em; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+.thumb-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: .85rem; }
+.thumb-item label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.thumb-item img, .thumb-img { width: 84px; height: 84px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
