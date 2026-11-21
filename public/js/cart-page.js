@@ -74,7 +74,7 @@
         <a class="citem__img" href="${link}">${img}</a>
         <div class="citem__body">
           <a class="citem__name" href="${link}">${esc(nm(p.name))}</a>
-          <span class="citem__brand">${esc(p.brand)}</span>
+          <span class="citem__brand">${esc(brandOf(p))}</span>
           <div class="citem__meta">${meta}</div>
           <div class="citem__row">
             <div class="stepper">

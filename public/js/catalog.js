@@ -22,3 +22,6 @@ const Catalog = {
     return [...same, ...rest].slice(0, n);
   }
 };
+
+// اسم الماركة حسب اللغة (لو مفيش اسم إنجليزي بيظهر العربي)
+const brandOf = p => (lang === 'en' && p.brandEn ? p.brandEn : p.brand);

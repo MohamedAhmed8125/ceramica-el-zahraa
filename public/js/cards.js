@@ -47,10 +47,10 @@ const ProductCard = (() => {
         </a>
         <button type="button" class="pcard__fav ${fav ? 'is-on' : ''}" data-fav="${esc(p.id)}" aria-label="${t('sh_fav')}" aria-pressed="${fav}">${HEART}</button>
         <div class="pcard__body">
-          <span class="pcard__brand">${esc(p.brand)}</span>
+          <span class="pcard__brand">${esc(brandOf(p))}</span>
           <a class="pcard__name" href="${link}">${esc(nm(p.name))}</a>
           ${tile ? `<span class="pcard__meta">${esc(p.tile.size)} ${t('sh_cm')} · ${esc(nm(p.tile.finish))}</span>` : ''}
-          <p class="pcard__stock ${!out && p.stock <= 1 ? 'low' : ''}">${stock}</p>
+          <p class="pcard__stock ${out ? 'out' : (p.stock <= 1 ? 'low' : '')}">${stock}</p>
           <div class="pcard__price">
             <strong>${t('currency')} ${fmt(p.price)}</strong>${tile ? `<small>${t('sh_perM2')}</small>` : ''}
             ${disc ? `<del>${fmt(p.old)}</del>` : ''}

@@ -565,6 +565,7 @@ function productFormHTML(p) {
   const tl = d.tile || {};
   const imgs = (p && p.images) || [];
   const brands = [...new Set(allProducts.map(x => x.brand))];
+  const brandsEn = [...new Set(allProducts.map(x => x.brandEn).filter(Boolean))];
   const v = x => esc(x ?? '');
   const flash = prodFlash;
   prodFlash = '';
@@ -591,10 +592,17 @@ function productFormHTML(p) {
       </div>
 
       <div class="grid2">
-        <label class="field"><span>الماركة *</span>
+        <label class="field"><span>الماركة (عربي) *</span>
           <input name="brand" list="brandList" maxlength="60" value="${v(d.brand)}">
           <datalist id="brandList">${brands.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
         </label>
+        <label class="field"><span>الماركة (English)</span>
+          <input name="brand_en" list="brandEnList" maxlength="60" dir="ltr" value="${v(d.brandEn)}">
+          <datalist id="brandEnList">${brandsEn.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+          <small class="hint">بتظهر لما العميل يقلب الموقع إنجليزي.</small>
+        </label>
+      </div>
+      <div class="grid2">
         <label class="field"><span>طريقة البيع</span>
           <select name="type">
             <option value="item" ${d.type !== 'tile' ? 'selected' : ''}>بالقطعة</option>
@@ -714,7 +722,14 @@ view.addEventListener('click', async e => {
 
 view.addEventListener('input', e => {
   if (e.target.id === 'prodSearch') { prodQuery = e.target.value; renderProdItems(); }
-  else if (e.target.form && e.target.form.id === 'productForm') syncProductForm();
+  else if (e.target.form && e.target.form.id === 'productForm') {
+    if (e.target.name === 'brand') {
+      const f = e.target.form;
+      const m = allProducts.find(x => x.brand === e.target.value.trim() && x.brandEn);
+      if (m && !f.elements.brand_en.value) f.elements.brand_en.value = m.brandEn;
+    }
+    syncProductForm();
+  }
 });
 
 view.addEventListener('change', e => {
@@ -765,7 +780,7 @@ view.addEventListener('submit', async e => {
     if (!r.ok) throw new Error(data.error || 'error');
     prodFlash = 'تم حفظ المنتج ✓';
     if (again) {
-      prodKeep = { cat: el.cat.value, sub: el.sub.value, brand: el.brand.value.trim(), type: el.type.value, use: el.use.value };
+      prodKeep = { cat: el.cat.value, sub: el.sub.value, brand: el.brand.value.trim(), brandEn: el.brand_en.value.trim(), type: el.type.value, use: el.use.value };
       await loadProducts();
       openProductForm(null);
     } else {

@@ -98,3 +98,5 @@
 .pd__fav svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
 .pd__fav.is-on { color: #d4461f; border-color: #f0c4c0; }
 .pd__fav.is-on svg { fill: #d4461f; }
+
+.pd__stock.out { color: #b3261e; }

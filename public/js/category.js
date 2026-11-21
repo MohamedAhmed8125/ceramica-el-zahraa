@@ -70,7 +70,7 @@
     .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/×/g, 'x');
   const haystack = p => {
     const c = CATEGORIES.find(x => x.id === p.cat);
-    return norm([p.name.ar, p.name.en, p.brand, p.tile && p.tile.size, p.tile && p.tile.finish.ar, p.tile && p.tile.finish.en, c && c.ar, c && c.en].join(' '));
+    return norm([p.name.ar, p.name.en, p.brand, p.brandEn, p.tile && p.tile.size, p.tile && p.tile.finish.ar, p.tile && p.tile.finish.en, c && c.ar, c && c.en].join(' '));
   };
   const searchMatch = p => { const h = haystack(p); return norm(params.q).split(/\s+/).filter(Boolean).every(w => h.includes(w)); };
 
@@ -127,30 +127,42 @@
 
   // مربعات الأقسام الفرعية
   const TONES = ['#d9cbb4', '#b9aa94', '#e8e1d6', '#a7a199', '#cdbfa8', '#c9bba3'];
+  const sqImg = (catId, slug) => `assets/images/categories/${catId}/${slug}.jpg`;
+  // لو صورة المربع مش موجودة بنستخدم صورة أول منتج في القسم ده، ولو مفيش بيفضل اللون
+  window.sqFallback = img => {
+    if (img.dataset.fb && !img.dataset.tried) { img.dataset.tried = '1'; img.src = img.dataset.fb; }
+    else img.remove();
+  };
+
   function squaresHTML() {
     if (!cat || params.q || params.deals || params.fav || params.sub) return '';
     const own = S.all.filter(p => p.cat === cat.id);
     let nodes;
-    if (grp) nodes = grp.items.map(i => ({ n: i, slugs: [slugify(i[1])], href: subHref(cat.id, slugify(i[1])) }));
+    if (grp) nodes = grp.items.map(i => { const s = slugify(i[1]); return { n: i, slug: s, slugs: [s], href: subHref(cat.id, s) }; });
     else nodes = cat.cols.map(col => {
       const slug = slugify(col.en);
       return col.items.length
-        ? { n: col, slugs: col.items.map(i => slugify(i[1])), href: groupHref(cat.id, slug) }
-        : { n: col, slugs: [slug], href: subHref(cat.id, slug) };
+        ? { n: col, slug, slugs: col.items.map(i => slugify(i[1])), href: groupHref(cat.id, slug) }
+        : { n: col, slug, slugs: [slug], href: subHref(cat.id, slug) };
     });
     if (!nodes.length) return '';
     return `<div class="squares">${nodes.map((x, i) => {
-      const count = own.filter(p => x.slugs.some(s => matchSub(p, s))).length;
-      return `<a class="sq ${count ? '' : 'is-empty'}" href="${x.href}">
-        <span class="sq__img" style="background-color:${TONES[i % TONES.length]}"></span>
-        <span class="sq__name">${esc(nm(x.n))}</span><small>${count}</small></a>`;
+      const matched = own.filter(p => x.slugs.some(s => matchSub(p, s)));
+      const withImg = matched.find(p => p.images && p.images[0]);
+      const fb = withImg ? withImg.images[0] : '';
+      return `<a class="sq ${matched.length ? '' : 'is-empty'}" href="${x.href}">
+        <span class="sq__img" style="background-color:${TONES[i % TONES.length]}">
+          <img src="${sqImg(cat.id, x.slug)}" alt="" loading="lazy" data-fb="${esc(fb)}" onerror="sqFallback(this)" onload="this.parentNode.classList.add('has-img')">
+        </span>
+        <span class="sq__name">${esc(nm(x.n))}</span><small>${matched.length}</small></a>`;
     }).join('')}</div>`;
   }
 
   /* ---------- الرسم ---------- */
   function filtersHTML() {
     const tiles = S.scope.filter(p => p.type === 'tile');
-    const brands = countBy(S.scope, p => p.brand).map(([v, n]) => [v, v, n]);
+    const brandLabel = new Map(S.scope.map(p => [p.brand, brandOf(p)]));
+    const brands = countBy(S.scope, p => p.brand).map(([v, n]) => [v, brandLabel.get(v), n]);
     const sizes = countBy(tiles, p => p.tile.size).map(([v, n]) => [v, `${v} ${t('sh_cm')}`, n]);
     const finishLabel = new Map(tiles.map(p => [p.tile.finish.en, nm(p.tile.finish)]));
     const finishes = countBy(tiles, p => p.tile.finish.en).map(([v, n]) => [v, finishLabel.get(v), n]);

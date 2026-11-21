@@ -2,6 +2,23 @@
   const root = document.getElementById('homeSections');
   if (!root) return;
 
+  // صف مربعات الأقسام. الصورة بتتاخد من assets/images/categories/<رقم القسم>.jpg
+  // ولو القسم ليه صورة باسم مختلف اكتب في categories.js:  img: 'assets/images/categories/اسم.png'
+  const strip = document.getElementById('catStrip');
+  const TILE_TONES = ['#d9cbb4', '#b9aa94', '#e8e1d6', '#a7a199', '#cdbfa8', '#c9bba3'];
+  const catImg = c => c.img || `assets/images/categories/${c.id}.jpg`;
+
+  function renderCats() {
+    if (!strip) return;
+    strip.innerHTML = `<div class="ctiles">${CATEGORIES.map((c, i) => `
+      <a class="ctile" href="${catHref(c.id)}">
+        <span class="ctile__img" style="--tone:${TILE_TONES[i % TILE_TONES.length]}">
+          <img src="${catImg(c)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('no-img');this.remove()">
+        </span>
+        <span class="ctile__name">${lang === 'en' ? c.en : c.ar}</span>
+      </a>`).join('')}</div>`;
+  }
+
   Object.assign(I18N.ar, { hm_ceramic: 'السيراميك والبورسلين', hm_sanitary: 'الأدوات الصحية والخلاطات' });
   Object.assign(I18N.en, { hm_ceramic: 'Ceramic & porcelain', hm_sanitary: 'Sanitary ware & mixers' });
 
@@ -42,7 +59,7 @@
     const sign = document.dir === 'rtl' ? -1 : 1;
     track.scrollBy({ left: sign * b.dataset.dir * track.clientWidth * 0.8, behavior: 'smooth' });
   });
-
-  document.addEventListener('langchange', render);
+  document.addEventListener('langchange', () => { renderCats(); render(); });
+  renderCats();
   Catalog.all().then(list => { ALL = list; render(); });
 })();

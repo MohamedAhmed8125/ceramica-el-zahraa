@@ -755,6 +755,7 @@ function parseProduct(b) {
   const nameAr = clean(b.name_ar, 120);
   const nameEn = clean(b.name_en, 120) || nameAr;
   const brand = clean(b.brand, 60);
+  const brandEn = clean(b.brand_en, 60);
   const cat = clean(b.cat, 40);
   const sub = clean(b.sub, 80);
   if (nameAr.length < 2) return { error: 'invalid_name' };
@@ -766,7 +767,7 @@ function parseProduct(b) {
   if (!Number.isInteger(stock) || stock < 0 || stock > 999999) return { error: 'invalid_stock' };
 
   const data = {
-    cat, sub, brand, type: b.type === 'tile' ? 'tile' : 'item',
+    cat, sub, brand, brandEn, type: b.type === 'tile' ? 'tile' : 'item',
     name: { ar: nameAr, en: nameEn },
     price: round2(price), old: old > price ? round2(old) : 0,
     stock, active: b.active !== 'false'

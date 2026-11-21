@@ -95,7 +95,7 @@
   }
 
   function specsHTML() {
-    const rows = [[t('pd_brand'), P.brand]];
+    const rows = [[t('pd_brand'), brandOf(P)]];
     if (isTile()) {
       rows.push(
         [t('pd_size'), `${P.tile.size} ${t('pd_cm')}`],
@@ -228,7 +228,7 @@
       <div class="pd">
         <div class="pd__gallery">${galleryHTML()}</div>
         <div class="pd__info">
-          <span class="pd__brand">${esc(P.brand)}</span>
+          <span class="pd__brand">${esc(brandOf(P))}</span>
           <h1 class="pd__name">${esc(nm(P.name))}</h1>
           <button type="button" class="pd__fav ${Favs.has(P.id) ? 'is-on' : ''}" data-fav="${esc(P.id)}" aria-pressed="${Favs.has(P.id)}">${ProductCard.HEART}<span>${t('sh_fav')}</span></button>
           <div class="pd__price">
@@ -237,7 +237,7 @@
             ${disc ? `<del>${fmt(P.old)}</del><em class="pd__disc">-${disc}%</em>` : ''}
           </div>
           ${isTile() ? `<p class="pd__box">${t('pd_boxPrice')}: <b>${t('currency')} ${fmt(boxPrice())}</b> <span>(${boxInfo()})</span></p>` : ''}
-          <p class="pd__stock ${P.stock <= 1 ? 'low' : ''}">${stock}</p>
+          <p class="pd__stock ${P.stock <= 0 ? 'out' : (P.stock <= 1 ? 'low' : '')}">${stock}</p>
           ${specsHTML()}
           ${isTile() ? calcHTML() : ''}
           ${buyHTML()}
