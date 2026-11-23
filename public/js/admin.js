@@ -106,6 +106,30 @@ async function messageAction(btn) {
 }
 
 /* ---------- المستخدمون ---------- */
+const PERM_LABELS = { products: 'المنتجات', orders: 'الطلبات', messages: 'الرسائل', banners: 'البانر' };
+let permOpen = null; // المستخدم اللي صلاحياته مفتوحة للتعديل
+
+const permRowHTML = u => `
+  <tr class="permrow"><td colspan="5">
+    <div class="permbox" data-id="${esc(u.id)}">
+      <strong>صلاحيات ${esc(u.name)}</strong>
+      <div class="permbox__list">
+        ${Object.entries(PERM_LABELS).map(([k, l]) => `<label class="check"><input type="checkbox" value="${k}" ${u.perms.includes(k) ? 'checked' : ''}> ${l}</label>`).join('')}
+      </div>
+      <small class="hint">من غير أي صلاحية بيبقى عميل عادي. المساعد مبيقدرش يدير المستخدمين ولا يدّي صلاحيات لحد.</small>
+      <div class="form-actions">
+        <button type="button" class="btn btn--primary" data-act="perm-save">حفظ</button>
+        <button type="button" class="btn btn--outline" data-act="perm-cancel">إلغاء</button>
+      </div>
+    </div>
+  </td></tr>`;
+
+function roleCell(u) {
+  if (u.owner) return '<td class="role-admin">المالك</td>';
+  if (u.perms.length) return `<td class="role-staff">مساعد: ${u.perms.map(p => PERM_LABELS[p]).join('، ')}</td>`;
+  return '<td>عميل</td>';
+}
+
 function renderUserTable() {
   const box = document.getElementById('userTable');
   if (!box) return;
@@ -117,13 +141,36 @@ function renderUserTable() {
         <tbody>${items.map(u => `
           <tr>
             <td>${esc(u.name)}</td><td>${esc(u.email)}</td>
-            <td class="${u.role === 'admin' ? 'role-admin' : ''}">${u.role === 'admin' ? 'أدمن' : 'عميل'}</td>
+            ${roleCell(u)}
             <td>${fmtDate(u.createdAt)}</td>
-            <td>${u.role === 'admin' ? '' : `<button type="button" class="link-danger" data-act="del-user" data-id="${esc(u.id)}">حذف</button>`}</td>
-          </tr>`).join('')}
+            <td class="uact">${u.owner ? '' : `
+              <button type="button" class="link-act" data-act="perm-edit" data-id="${esc(u.id)}">الصلاحيات</button>
+              <button type="button" class="link-danger" data-act="del-user" data-id="${esc(u.id)}">حذف</button>`}</td>
+          </tr>
+          ${permOpen === u.id && !u.owner ? permRowHTML(u) : ''}`).join('')}
         </tbody></table></div>`
     : `<div class="empty">${allUsers.length ? 'مفيش نتايج مطابقة.' : 'مفيش مستخدمين لسه.'}</div>`;
 }
+
+view.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act^="perm-"]');
+  if (!b) return;
+  try {
+    if (b.dataset.act === 'perm-edit') {
+      permOpen = permOpen === b.dataset.id ? null : b.dataset.id;
+      renderUserTable();
+    } else if (b.dataset.act === 'perm-cancel') {
+      permOpen = null;
+      renderUserTable();
+    } else if (b.dataset.act === 'perm-save') {
+      const box = b.closest('.permbox');
+      const perms = [...box.querySelectorAll('input:checked')].map(i => i.value);
+      await api(`/api/admin/users/${box.dataset.id}/perms`, { method: 'PATCH', body: JSON.stringify({ perms }) });
+      permOpen = null;
+      await showUsers();
+    }
+  } catch { alert('حصل خطأ، جرّب تاني.'); }
+});
 
 async function showUsers() {
   allUsers = (await api('/api/admin/users')).users;
@@ -801,7 +848,10 @@ view.addEventListener('submit', async e => {
   }
 });
 
-/* ---------- البداية: التأكد إنه أدمن ---------- */
+/* ---------- البداية: التأكد إنه أدمن ومن صلاحياته ---------- */
+let ME = { owner: false, perms: [] };
+const canTab = tab => (tab === 'overview' || tab === 'settings' ? true : tab === 'users' ? ME.owner : ME.owner || ME.perms.includes(tab));
+
 (async function init() {
   try {
     const { user } = await api('/api/me');
@@ -809,9 +859,11 @@ view.addEventListener('submit', async e => {
       document.querySelector('.admin__wrap').innerHTML = '<div class="empty">مفيش عندك صلاحية لدخول لوحة التحكم.</div>';
       return;
     }
+    ME = user;
   } catch {
     location.href = '/login.html';
     return;
   }
+  document.querySelectorAll('.admin__tabs [data-tab]').forEach(b => { if (!canTab(b.dataset.tab)) b.remove(); });
   openTab('overview');
 })();

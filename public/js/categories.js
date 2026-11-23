@@ -18,16 +18,17 @@ const CATEGORIES = [
 
   { id: 'mixers', ar: 'خلاطات وأنظمة دفن', en: 'Mixers & concealed systems', cols: [
     { ar: 'خلاطات الحمام', en: 'Bathroom mixers', items: [
-      ['خلاطات بانيو', 'Bath mixers'], ['خلاطات حوض', 'Basin mixers'], ['خلاطات دش', 'Shower mixers'], ['خلاط بيديه', 'Bidet mixer'] ] },
+      ['خلاطات بانيو', 'Bath mixers'], ['خلاطات حوض', 'Basin mixers'], ['خلاطات دش', 'Shower mixers']] },
     { ar: 'أنظمة الدفن والشاور', en: 'Concealed & shower systems', items: [
-      ['شاور بانل', 'Shower panel'], ['شاور سيستم', 'Shower system'], ['أنظمة دفن', 'Concealed systems'], ['خزانات دفن', 'Concealed cisterns'] ] },
+      ['شاور بانل', 'Shower panel'], ['شاور سيستم', 'Shower system'], ['أنظمة دفن', 'Concealed systems'],
+      ['خزانات دفن', 'Concealed cisterns'], ['طاسات دش', 'Shower heads'] ] },
     { ar: 'خلاطات المطبخ', en: 'Kitchen mixers', items: [
       ['خلاطات مطبخ حائطي', 'Wall-mounted kitchen mixers'], ['خلاطات مطبخ على الحوض', 'Deck-mounted kitchen mixers'] ] }
   ] },
 
   { id: 'sanitary', ar: 'صحي', en: 'Sanitary ware', cols: [
     { ar: 'أطقم الحمام', en: 'Bathroom sets', items: [] },
-    { ar: 'تواليت', en: 'Toilets', items: [] },
+    { ar: 'تواليت', en: 'Toilets', items: [['تواليت معلق', 'Wall-hung toilet'], ['تواليت عادي', 'Standard toilet']] },
     { ar: 'غطاء تواليت', en: 'Toilet seats', items: [] },
     { ar: 'بانيوهات وكبائن', en: 'Bathtubs & shower cabins', items: [
       ['بانيو بدون جانب', 'Bathtub without side'], ['كبائن شاور', 'Shower cabins'], ['بانيو مع جانب', 'Bathtub with side'], ['جاكوزي', 'Jacuzzi'] ] }
@@ -46,11 +47,11 @@ const CATEGORIES = [
       ['التركيبات الصحية', 'Sanitary fittings'], ['خزانات المياه', 'Water tanks'], ['مضخات المياه', 'Water pumps'],
       ['محابس', 'Valves'], ['مجرى شاور', 'Shower drain'], ['طابق', 'Tabaq'] ] },
     { ar: 'لوازم صرف', en: 'Drainage fittings', items: [
-      ['مواسير صرف', 'Drain pipes'], ['كوع', 'Elbow'], ['بيبة', 'Pipe'], ['تيه', 'Tee'], ['بوب أب ويست', 'Pop-up waste'] ] }
+      ['مواسير صرف', 'Drain pipes'], ['كوع', 'Elbow'], ['بيبة', 'Pipe'], ['تيه', 'Tee']] }
   ] },
 
-  { id: 'decor', ar: 'ديكور', en: 'Decor', cols: [
-    { ar: 'الإكسسوارات والديكور', en: 'Accessories & decor', items: [['مرايات', 'Mirrors'], ['إكسسوارات الحمام', 'Bathroom accessories']] }
+  { id: 'decor', ar: 'إكسسوارات', en: 'Accessories', cols: [
+    { ar: 'إكسسوارات ومرايات', en: 'Accessories & decor', items: [['مرايات', 'Mirrors'], ['إكسسوارات الحمام', 'Bathroom accessories']] }
   ] }
 ];
 

@@ -30,7 +30,10 @@ const MAIL_PASS = (process.env.MAIL_APP_PASSWORD || '').replace(/\s/g, '');
 const mailer = MAIL_USER && MAIL_PASS
   ? nodemailer.createTransport({ service: 'gmail', auth: { user: MAIL_USER, pass: MAIL_PASS } })
   : null;
-const isAdmin = u => !!ADMIN_EMAIL && u.email === ADMIN_EMAIL;
+const ALL_PERMS = ['products', 'orders', 'messages', 'banners'];
+const isOwner = u => !!ADMIN_EMAIL && u.email === ADMIN_EMAIL;
+const permsOf = u => (isOwner(u) ? ALL_PERMS : (Array.isArray(u.perms) ? u.perms.filter(p => ALL_PERMS.includes(p)) : []));
+const isAdmin = u => isOwner(u) || permsOf(u).length > 0; // يقدر يدخل لوحة التحكم
 const DB_FILE = path.join(__dirname, '..', 'data', 'users.json');
 const COOKIE = 'token';
 const DUMMY_HASH = bcrypt.hashSync('dummy-password', 12); // لتقليل الفرق الزمني عند إيميل غير موجود
@@ -52,7 +55,11 @@ const updateUsers = fn => (queue = queue.then(async () => {
 
 /* ---------- Helpers ---------- */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const publicUser = u => ({ id: u.id, name: u.name, email: u.email, role: isAdmin(u) ? 'admin' : 'user' });
+const publicUser = u => ({
+  id: u.id, name: u.name, email: u.email,
+  role: isAdmin(u) ? 'admin' : 'user',
+  owner: isOwner(u), perms: permsOf(u)
+});
 const setCookie = (res, user) => {
   const token = jwt.sign({ sub: user.id }, SECRET, { expiresIn: '7d' });
   res.cookie(COOKIE, token, {
@@ -216,8 +223,14 @@ const updateMessages = fn => {
   return run;
 };
 
-const requireAdmin = (req, res, next) =>
-  isAdmin(req.user) ? next() : res.status(403).json({ error: 'forbidden' });
+// المالك بيدخل كل حاجة. المساعد بس بيدخل على اللي اتفتحله. وأي مسار تاني (زي المستخدمين) للمالك بس
+const requireAdmin = (req, res, next) => {
+  if (isOwner(req.user)) return next();
+  const area = /^\/api\/admin\/(products|orders|messages|banners)(\/|$)/.exec(req.path);
+  const open = req.path === '/api/admin/stats' || req.path === '/api/admin/password';
+  const ok = open ? isAdmin(req.user) : (area ? permsOf(req.user).includes(area[1]) : false);
+  ok ? next() : res.status(403).json({ error: 'forbidden' });
+};
 const adminOnly = [auth, requireAdmin];
 
 app.get('/api/admin/stats', adminOnly, async (req, res) => {
@@ -258,7 +271,8 @@ app.delete('/api/admin/messages/:id', adminOnly, async (req, res) => {
 
 app.get('/api/admin/users', adminOnly, async (req, res) => {
   const users = (await readUsers()).map(u => ({
-    id: u.id, name: u.name, email: u.email, role: isAdmin(u) ? 'admin' : 'user', createdAt: u.createdAt
+    id: u.id, name: u.name, email: u.email,
+    owner: isOwner(u), perms: isOwner(u) ? [] : permsOf(u), createdAt: u.createdAt
   }));
   res.json({ users: users.reverse() });
 });
@@ -268,8 +282,22 @@ app.delete('/api/admin/users/:id', adminOnly, async (req, res) => {
   const result = await updateUsers(users => {
     const i = users.findIndex(u => u.id === req.params.id);
     if (i < 0) return 'not_found';
-    if (isAdmin(users[i])) return 'is_admin';
+    if (isOwner(users[i])) return 'is_admin';
     users.splice(i, 1);
+    return 'ok';
+  });
+  if (result === 'ok') return res.json({ ok: true });
+  res.status(result === 'not_found' ? 404 : 400).json({ error: result });
+});
+
+app.patch('/api/admin/users/:id/perms', adminOnly, async (req, res) => {
+  if (!Array.isArray(req.body.perms)) return res.status(400).json({ error: 'invalid_perms' });
+  const perms = [...new Set(req.body.perms.filter(p => ALL_PERMS.includes(p)))];
+  const result = await updateUsers(users => {
+    const u = users.find(x => x.id === req.params.id);
+    if (!u) return 'not_found';
+    if (isOwner(u)) return 'is_owner';
+    u.perms = perms;
     return 'ok';
   });
   if (result === 'ok') return res.json({ ok: true });

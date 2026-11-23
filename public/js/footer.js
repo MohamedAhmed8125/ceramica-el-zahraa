@@ -17,8 +17,7 @@ const FOOTER_CONFIG = {
   },
   mapLink: 'https://maps.app.goo.gl/hQicznhBrN7zd9Go9',          // زرار "افتح في خرائط جوجل"
   mapEmbed: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3456.371726432161!2d31.315016475172474!3d29.968745274961744!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x145839a84c9a2c99%3A0x624e2915b98fef6a!2sCiramica%20Elzahraa!5e0!3m2!1sen!2seg!4v1791205347671!5m2!1sen!2seg',                                                   // رابط الخريطة المدمجة (اختياري، الشرح تحت)
-  mapQuery: 'سيراميكا الزهراء، شارع الخمسين، المعادي، القاهرة',    // البحث الاحتياطي لو mapEmbed فاضي
-  payments: ['Visa', 'Mastercard']
+  mapQuery: 'سيراميكا الزهراء، شارع الخمسين، المعادي، القاهرة'  // البحث الاحتياطي لو mapEmbed فاضي
 };
 /* ================================== */
 
@@ -52,7 +51,6 @@ function mailHref(email) {
       .filter(([, url]) => url)
       .map(([k, url]) => `<a href="${url}" target="_blank" rel="noopener" aria-label="${k}"><i class="fa-brands ${icons[k]}"></i></a>`)
       .join('');
-    const pay = C.payments.map(p => `<span>${p}</span>`).join('');
 
     mount.innerHTML = `
     <footer class="footer">
@@ -103,7 +101,6 @@ function mailHref(email) {
         <div class="footer__social">
           <h3>${t('followUs')}</h3>
           <div class="social">${social}</div>
-          <div class="pay">${pay}</div>
         </div>
       </div>
 
